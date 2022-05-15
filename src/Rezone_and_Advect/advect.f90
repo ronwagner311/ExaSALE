@@ -1587,7 +1587,7 @@ contains
                     sie_vof(tmp_mat,i, j, 1) = sie_vof_adv(tmp_mat,i, j, 1)
                     if (this%advect_init_layer_mat > 0) init_mat_layers(tmp_mat,i, j, 1) = init_mat_layers_adv(tmp_mat,i, j, 1)
                     sie(i, j, 1)                 = sie(i, j, 1)       + sie_vof(tmp_mat,i, j, 1) * cell_mass_vof(tmp_mat,i, j, 1)
-                    cell_mass(i, j, 1)           = cell_mass(tmp_mat,i, j, 1) + cell_mass_vof(tmp_mat,i, j, 1)
+                    cell_mass(i, j, 1)           = cell_mass(i, j, 1) + cell_mass_vof(tmp_mat,i, j, 1)
                     vof(i, j, 1)                 = vof(i, j, 1)       + mat_vof(tmp_mat,i, j, 1)
                     n_materials_in_cell(i, j, 1) = n_materials_in_cell(i, j, 1) + 1
                     mat_id(i, j, 1)              = mat_id(i, j, 1)    + tmp_mat * index_factor
