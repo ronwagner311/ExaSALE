@@ -142,7 +142,7 @@ write(*,*) " making the sod"
         integer                                           , intent(in) :: d3           
         type(cell_bc_wrapper_t), dimension(:), pointer    , intent(in) :: bc           
         integer                                           , intent(in) :: number_layers 
-        integer, dimension(:), allocatable                , intent(in) :: number_cells 
+        integer, dimension(:), allocatable                , intent(in) :: number_cells
         type(boundary_parameters_t), pointer              , intent(in) :: bc_params
         integer, dimension(:), allocatable                , intent(in) :: mat_index
 
@@ -189,9 +189,9 @@ write(*,*) " making the sod"
         integer                                           , intent(in) :: number_layers_i  
         integer                                           , intent(in) :: number_layers_j  
         integer                                           , intent(in) :: number_layers_k  
-        integer, dimension(:), allocatable                , intent(in) :: number_cells_i 
-        integer, dimension(:), allocatable                , intent(in) :: number_cells_j 
-        integer, dimension(:), allocatable                , intent(in) :: number_cells_k 
+        integer, dimension(:), allocatable                , intent(in) :: number_cells_i
+        integer, dimension(:), allocatable                , intent(in) :: number_cells_j
+        integer, dimension(:), allocatable                , intent(in) :: number_cells_k
         type(boundary_parameters_t), pointer, intent(in) :: bc_params
 
         integer, dimension(:), allocatable                , intent(in) :: mat_index

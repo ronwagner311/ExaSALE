@@ -43,7 +43,7 @@ contains
       real(8) :: p_val, d_val, a_val, t_val
 
       real(8), dimension(:, :, :), pointer              :: x, y, tot_vof, density, temperature, pressure, arti_visc
-      real(8), dimension(:, :, :), pointer              :: vel_x, vel_y, num_mats, mat_id, mat_vof
+      real(8), dimension(:, :, :), pointer              :: vel_x, vel_y, num_mats, mat_id
       type(advect_t)            , pointer              :: advect
 
       call this%hydro_step%Point_to_artificial_viscosity_data(arti_visc)
@@ -56,6 +56,8 @@ contains
       call this%hydro_step%Point_to_velocity_data(vel_x, vel_y)
       call this%hydro_step%Point_to_mat_id_data(mat_id)
       call this%hydro_step%Point_to_advect(advect)
+
+
       this%diagnostic_counter = this%diagnostic_counter + 1
 
       if (this%diagnostic_counter > 99) then
@@ -172,18 +174,17 @@ contains
                end if
                if (num_mats(i, j, 1) < 2) cycle
                numb = 0
-               do ii = 1, this%hydro_step%n_materials
-                  call this%hydro_step%Point_to_mat_vof_data(mat_vof, ii)
-                  if (mat_vof(i, j, 1) < emf) cycle
-                  numb = numb + 1
-                  if (numb >= num_mats(i, j, 1)) cycle
-                     call advect%Calculate_vof_line_new(x, y, 0d0, ii, i, j, 1, nxp - 1, nyp - 1, 0, a, b, c, x1, y1, x2, y2, max_iter)
-                  if (abs(x1) < 1d-30) x1 = 0d0
-                  if (abs(x2) < 1d-30) x2 = 0d0
-                  if (abs(y1) < 1d-30) y1 = 0d0
-                  if (abs(y2) < 1d-30) y2 = 0d0
-                  write(this%diagnostics_group_file, 1005) x2,y2,x1,y1
-               end do
+!               do ii = 1, this%hydro_step%nmats
+!!                  if (mat_vof(ii, i, j, 1) < emf) cycle
+!                  numb = numb + 1
+!                  if (numb >= num_mats(i, j, 1)) cycle
+!                     call advect%Calculate_vof_line_new(x, y, 0d0, ii, i, j, 1, nxp - 1, nyp - 1, 0, a, b, c, x1, y1, x2, y2, max_iter)
+!                  if (abs(x1) < 1d-30) x1 = 0d0
+!                  if (abs(x2) < 1d-30) x2 = 0d0
+!                  if (abs(y1) < 1d-30) y1 = 0d0
+!                  if (abs(y2) < 1d-30) y2 = 0d0
+!                  write(this%diagnostics_group_file, 1005) x2,y2,x1,y1
+!               end do
             end do
          end do
          1005  format(4(1PE14.5E3))

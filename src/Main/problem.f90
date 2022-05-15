@@ -37,13 +37,15 @@ module problem_module
     use mesh_module                     , only : mesh_t
     use time_module                     , only : time_t
     use diagnostic_module               , only : diagnostic_t, textual_diagnostic_t, plot_diagnostic_t!, silo_diagnostic_t, plot_diagnostic_t, &
-!        textual_diagnostic_hdf5_t, Static_hdf5_init, Static_hdf5_close
+    !        textual_diagnostic_hdf5_t, Static_hdf5_init, Static_hdf5_close
     use communication_parameters_module , only : communication_parameters_t
     use communication_module            , only : communication_t
     use parallel_parameters_module      , only : parallel_parameters_t
     use boundary_parameters_module      , only : boundary_parameters_t
- !   use hdf5
- !   use cr_module                       , only : cr_t
+    use data_4d_module, only: data_4d_t
+    use material_quantity_module    , only : material_quantity_t
+    !   use hdf5
+    !   use cr_module                       , only : cr_t
     use mpi
     implicit none
     private
@@ -68,7 +70,7 @@ module problem_module
 
         integer                                               :: wilkins_scheme 
 
- !       integer(hid_t)                                        :: main_hdf5_diagnostics_file_id 
+        !       integer(hid_t)                                        :: main_hdf5_diagnostics_file_id
 
         real(8)                                               :: emf, emfm 
 
@@ -97,11 +99,11 @@ module problem_module
         type (data_t)                  , pointer :: total_dt_de_deriv   
         type (data_t)                  , pointer :: total_dt_drho_deriv 
 
-        type (material_t)   , dimension(:), pointer             :: materials   
-        type (eos_wrapper_t), dimension(:), allocatable         :: total_eos   
+        type (material_t)   , pointer             :: materials
+!        type (eos_wrapper_t), dimension(:), allocatable         :: total_eos
         type (textual_diagnostic_t), dimension(:), allocatable  :: textual_diagnostics
-!        type (textual_diagnostic_hdf5_t), dimension(:), allocatable  :: textual_diagnostics_hdf5
-!        type (silo_diagnostic_t), pointer                       :: silo_diagnostic
+        !        type (textual_diagnostic_hdf5_t), dimension(:), allocatable  :: textual_diagnostics_hdf5
+        !        type (silo_diagnostic_t), pointer                       :: silo_diagnostic
         type (plot_diagnostic_t), pointer                       :: plot_diagnostic
 
         type(boundary_parameters_t), pointer :: boundary_params
@@ -166,6 +168,7 @@ contains
         integer                                           :: counter, text_diag_counter, hdf5_diag_counter, tmp_mat
         character(len=80)       :: word
         integer, dimension(:, :), allocatable :: start_index
+        real(8), dimension(:,:,:,:), pointer :: cell_mass_vof,density_vof
 
         integer :: myid, numprocs, ierr
         integer :: nxp, nyp, nzp, nx,ny,nz
@@ -220,13 +223,13 @@ contains
         allocate(Constructor%total_dt_de_deriv)
         allocate(Constructor%num_mat_cells)
         allocate(Constructor%hydro)
-!        allocate(Constructor%cr)
+        !        allocate(Constructor%cr)
         allocate(Constructor%textual_diagnostics(0:df%num_diag_text))
- !       allocate(Constructor%textual_diagnostics_hdf5(0:df%num_diag_hdf5))
-write(*,*) "num of mats:", df%reduct_num_mat
-        allocate(material_t    :: Constructor%materials (0:df%reduct_num_mat+1))
+         !       allocate(Constructor%textual_diagnostics_hdf5(0:df%num_diag_hdf5))
+        write(*,*) "num of mats:", df%reduct_num_mat
+        allocate(material_t    :: Constructor%materials)
 
-        allocate(eos_wrapper_t :: Constructor%total_eos (df%reduct_num_mat))
+!        allocate(eos_wrapper_t :: Constructor%total_eos (df%reduct_num_mat))
         allocate(Constructor%boundary_params)
         if (df%dimension == 2) allocate(bc_v_wrap_arr(4))
         if (df%dimension == 3) allocate(bc_v_wrap_arr(6))
@@ -246,7 +249,7 @@ write(*,*) "num of mats:", df%reduct_num_mat
         end if
 
         Constructor%boundary_params = boundary_parameters_t(nxp, nyp, nzp, Constructor%dimension,Constructor%parallel_params&
-        , df%mesh_type, df%boundary_conditions)
+            , df%mesh_type, df%boundary_conditions)
 
 
 
@@ -308,12 +311,12 @@ write(*,*) "num of mats:", df%reduct_num_mat
 
         else if (df%dimension == 3) then
             if (df%mesh_type == 1) then 
-            Constructor%mat_cells = materials_in_cells_t(nxp, nyp, nzp, bc_c_wrap_arr,Constructor%boundary_params,&
-                                                         df%number_layers_i, df%number_cells_i, &
-                                                         df%mat_index, Constructor%parallel_params)
+                Constructor%mat_cells = materials_in_cells_t(nxp, nyp, nzp, bc_c_wrap_arr,Constructor%boundary_params,&
+                    df%number_layers_i, df%number_cells_i, &
+                    df%mat_index, Constructor%parallel_params)
             else 
                 Constructor%mat_cells = materials_in_cells_t(nxp, nyp, nzp, bc_c_wrap_arr,Constructor%boundary_params,&
-                     1,df%mat_index, Constructor%parallel_params)
+                    1,df%mat_index, Constructor%parallel_params)
             end if
             allocate(mesh_3d)
             mesh_3d = mesh_3d_t(df, bc_v_wrap_coordinates_arr, Constructor%boundary_params, Constructor%parallel_params)
@@ -322,7 +325,7 @@ write(*,*) "num of mats:", df%reduct_num_mat
         write(*,*) "done mesh"
 
         Constructor%total_temperature   = temperature_t(df%init_temperature, nxp, nyp, nzp, bc_c_wrap_arr,&
-             Constructor%boundary_params)
+            Constructor%boundary_params)
         Constructor%total_dp_de_deriv   = data_t  (nxp, nyp, nzp)
         Constructor%total_dp_drho_deriv = data_t  (nxp, nyp, nzp)
         Constructor%total_dt_de_deriv   = data_t  (nxp, nyp, nzp)
@@ -361,7 +364,7 @@ write(*,*) "num of mats:", df%reduct_num_mat
                 nzp + 1, bc_v_wrap_arr,Constructor%boundary_params )
         else
             Constructor%velocity          = velocity_t    (0d0, nxp+1, nyp+1, 1, df%dimension, bc_v_wrap_arr,&
-            Constructor%boundary_params)
+                Constructor%boundary_params)
             Constructor%acceleration      = acceleration_t(0d0, nxp+1, nyp+1, 1, bc_v_wrap_arr,Constructor%boundary_params)
             Constructor%total_vertex_mass = vertex_mass_t(0d0, nxp + 1, nyp + 1, &
                 1, bc_v_wrap_arr,Constructor%boundary_params )
@@ -376,27 +379,33 @@ write(*,*) "num of mats:", df%reduct_num_mat
                 ,Constructor%boundary_params)
         end if
 
+        !df, nx, ny, nz, nxp, nyp, nzp, wilkins_scheme, mesh, velocity, acceleration,&
+        !        total_volume, total_vof, total_sie, total_pressure, total_pressure_sum, total_density, &
+        !        total_temperature, total_cell_mass, previous_cell_mass, vertex_mass, &
+        !        previous_vertex_mass, inversed_vertex_mass, total_sound_vel,&
+        !        a_visc, total_dp_de, total_dp_drho, total_dt_de, total_dt_drho, init_temperature, &
+        !        nmats, materials, num_mat_cells, mat_id, emf, emfm, parallel_params, mat_ids
 
-        Constructor%hydro = hydro_step_t(df, Constructor%nx , Constructor%ny , Constructor%nz, Constructor%nxp         ,&
-            Constructor%nyp, Constructor%nzp, Constructor%wilkins_scheme, Constructor%mesh,&
-            Constructor%velocity , Constructor%acceleration, Constructor%total_volume     ,&
-            Constructor%total_vof, Constructor%total_sie   , Constructor%total_pressure   ,&
-            Constructor%total_pressure_sum, Constructor%total_density                     ,&
-            Constructor%total_temperature,  Constructor%total_cell_mass                   ,&
-            Constructor%previous_cell_mass, Constructor%total_vertex_mass                 ,&
-            Constructor%previous_vertex_mass, Constructor%total_inverse_vertex_mass       ,&
-            Constructor%total_sound_vel,    Constructor%a_visc                            ,&
-            Constructor%total_dp_de_deriv,  Constructor%total_dp_drho_deriv               ,&
-            Constructor%total_dt_de_deriv,  Constructor%total_dt_drho_deriv               ,&
-            df%init_temperature           ,&
-            Constructor%n_materials, Constructor%materials, Constructor%num_mat_cells     ,&
-            Constructor%mat_cells, Constructor%emf, Constructor%emfm, Constructor%parallel_params)
+                Constructor%hydro = hydro_step_t(df, Constructor%nx , Constructor%ny , Constructor%nz, Constructor%nxp         ,&
+                    Constructor%nyp, Constructor%nzp, Constructor%wilkins_scheme, Constructor%mesh,&
+                    Constructor%velocity , Constructor%acceleration, Constructor%total_volume     ,&
+                    Constructor%total_vof, Constructor%total_sie   , Constructor%total_pressure   ,&
+                    Constructor%total_pressure_sum, Constructor%total_density                     ,&
+                    Constructor%total_temperature,  Constructor%total_cell_mass                   ,&
+                    Constructor%previous_cell_mass, Constructor%total_vertex_mass                 ,&
+                    Constructor%previous_vertex_mass, Constructor%total_inverse_vertex_mass       ,&
+                    Constructor%total_sound_vel,    Constructor%a_visc                            ,&
+                    Constructor%total_dp_de_deriv,  Constructor%total_dp_drho_deriv               ,&
+                    Constructor%total_dt_de_deriv,  Constructor%total_dt_drho_deriv               ,&
+                    df%init_temperature           ,&
+                    Constructor%n_materials, Constructor%materials, Constructor%num_mat_cells     ,&
+                    Constructor%mat_cells, Constructor%emf, Constructor%emfm, Constructor%parallel_params, df%mat_index)
  
         !Constructor%cr = cr_t(Constructor%hydro, Constructor%time,Constructor%boundary_params ,df%run_name, df%with_cr)
  
-!        if ( df%num_diag_hdf5 > 0 ) then
+        !        if ( df%num_diag_hdf5 > 0 ) then
          !   Constructor%main_hdf5_diagnostics_file_id = Static_hdf5_init()
-!        end if
+        !        end if
 
         text_diag_counter = 1
         hdf5_diag_counter = 1
@@ -471,11 +480,11 @@ write(*,*) "num of mats:", df%reduct_num_mat
 
             if(Constructor%dimension == 3) then
                 call Constructor%previous_vertex_mass%Calculate_vertex_mass_3d(Constructor%mesh%coordinates,&
-                     Constructor%total_density&
+                    Constructor%total_density&
                     , Constructor%total_cell_mass)
             else
                 call Constructor%previous_vertex_mass%Calculate_vertex_mass_2d(Constructor%mesh%coordinates,&
-                                Constructor%total_density&
+                    Constructor%total_density&
                     , Constructor%total_cell_mass, Constructor%wilkins_scheme, Constructor%mesh%cyl)
             end if
 
@@ -488,21 +497,31 @@ write(*,*) "num of mats:", df%reduct_num_mat
         call Constructor%Create_inverse_vertex_mass(Constructor%emfm, Constructor%total_vertex_mass, &
             Constructor%total_inverse_vertex_mass)
         call Constructor%total_inverse_vertex_mass%Exchange_virtual_space_blocking()
-        do tmp_mat=1, Constructor%n_materials
-write(*,*) "going to calculate_cell_mass mate"            , tmp_mat
-call Constructor%materials(tmp_mat)%cell_mass%Calculate_cell_mass&
-                (Constructor%total_volume, Constructor%materials(tmp_mat)%density)
-            call Constructor%materials(tmp_mat)%sie%Exchange_virtual_space_blocking()
-            call Constructor%materials(tmp_mat)%density%Exchange_virtual_space_blocking()
-            call Constructor%materials(tmp_mat)%cell_mass%Exchange_virtual_space_blocking()
-            call Constructor%materials(tmp_mat)%temperature%Exchange_virtual_space_blocking()
+
+call Constructor%materials%density%point_to_data(density_vof)
+
+        do k = 1, Constructor%nz
+            do j = 1, Constructor%ny
+                do i = 1, Constructor%nx
+                    do tmp_mat=1, Constructor%n_materials
+                        cell_mass_vof(tmp_mat, i,j,k) = vol(i,j,k) * density_vof(tmp_mat,i,j,k)
+                    end do
+
+                end do
+            end do
+
         end do
+        call Constructor%materials%sie%Exchange_virtual_space_blocking()
+        call Constructor%materials%density%Exchange_virtual_space_blocking()
+        call Constructor%materials%cell_mass%Exchange_virtual_space_blocking()
+        call Constructor%materials%temperature%Exchange_virtual_space_blocking()
+
 
         call Constructor%Initialize_sie(Constructor%emf)
         call Constructor%a_visc%Initialize(df%quad_visc_fac, df%linear_visc_fac, df%to_radial_index_sphere,&
-         df%from_radial_index_sphere, df%start_layer_index_r,df%no_xl_flag, df%start_no_xl_visc, df%end_no_xl_visc, df%offset_no_xl_visc)
+            df%from_radial_index_sphere, df%start_layer_index_r,df%no_xl_flag, df%start_no_xl_visc, df%end_no_xl_visc, df%offset_no_xl_visc)
         call Constructor%velocity%Initialize(df%to_radial_index_sphere,&
-         df%from_radial_index_sphere, df%no_move_layer, df%start_layer_index_r)
+            df%from_radial_index_sphere, df%no_move_layer, df%start_layer_index_r)
 
         write (*,*) "finished building problem"
 
@@ -540,9 +559,9 @@ call Constructor%materials(tmp_mat)%cell_mass%Calculate_cell_mass&
         call this%num_mat_cells%Set_communication(this%communication, this%communication_parameters_cell)
         call this%total_inverse_vertex_mass%Set_communication(this%communication, this%communication_parameters_cell)
 
-        do i = 1, this%n_materials 
-            call this%materials(i)%Set_communication_material(this%communication, this%communication_parameters_cell)
-        end do
+        !        do i = 1, this%n_materials
+        call this%materials%Set_communication_material(this%communication, this%communication_parameters_cell)
+        !        end do
 
         call this%total_density%Set_communication(this%communication, this%communication_parameters_cell)
         call this%total_cell_mass%Set_communication(this%communication, this%communication_parameters_cell)
@@ -569,9 +588,9 @@ call Constructor%materials(tmp_mat)%cell_mass%Calculate_cell_mass&
             call this%textual_diagnostics(i)%Apply
         end do
 
- !       do i=1,size(this%textual_diagnostics_hdf5(1:))
- !           call this%textual_diagnostics_hdf5(i)%Apply
- !       end do
+        !       do i=1,size(this%textual_diagnostics_hdf5(1:))
+        !           call this%textual_diagnostics_hdf5(i)%Apply
+        !       end do
         if (associated(this%plot_diagnostic)) call this%plot_diagnostic%Apply
         if (mod(this%hydro%cyc_delete, 100) == 0 .or. counter_diag == 0) then
 
@@ -589,9 +608,9 @@ call Constructor%materials(tmp_mat)%cell_mass%Calculate_cell_mass&
             call this%textual_diagnostics(i)%Close_diagnostic
         end do
 
-!        do i=1,size(this%textual_diagnostics_hdf5(1:))
-!            call this%textual_diagnostics_hdf5(i)%Close_diagnostic
-!        end do
+        !        do i=1,size(this%textual_diagnostics_hdf5(1:))
+        !            call this%textual_diagnostics_hdf5(i)%Close_diagnostic
+        !        end do
 
         if ( associated(this%plot_diagnostic) ) call this%plot_diagnostic%Close_diagnostic
         !if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Close_diagnostic
@@ -626,7 +645,7 @@ call Constructor%materials(tmp_mat)%cell_mass%Calculate_cell_mass&
         type(communication_parameters_t), pointer       :: comm_params
         type(communication_t)    , pointer       :: communication
         integer :: aaaai
-!        call this%cr%Get_ckpt_name(this%name, ckpt_name)
+        !        call this%cr%Get_ckpt_name(this%name, ckpt_name)
 #ifdef DEBUG
         write(*,*) '@@@@ ATTACHE TO PROCESS AND CHANGE i to 0 TO CONTINUE EXECUTION @@@@'
         aaaai = 1
@@ -645,7 +664,7 @@ call Constructor%materials(tmp_mat)%cell_mass%Calculate_cell_mass&
                 call this%hydro%do_time_step_2d(this%time)
                 call this%time%Update_time()
                 call this%Write_to_files()
-         !       call this%cr%Checkpoint(ckpt_name)
+            !       call this%cr%Checkpoint(ckpt_name)
             end do
 
         else if (this%mesh%dimension == 3) then
@@ -655,7 +674,7 @@ call Constructor%materials(tmp_mat)%cell_mass%Calculate_cell_mass&
                 call this%time%Update_time()
                 call this%Write_to_files()
                 counter = counter + 1
-          !      call this%cr%Checkpoint(ckpt_name)
+            !      call this%cr%Checkpoint(ckpt_name)
             end do
         end if
 
@@ -670,9 +689,9 @@ call Constructor%materials(tmp_mat)%cell_mass%Calculate_cell_mass&
         class(problem_t)                                , intent(inout) :: this          
         type(datafile_t)                                , intent(in)    :: df            
         type(cell_bc_wrapper_t  ), dimension(:), pointer, intent(inout) :: bc_c_wrap_arr 
-        type(materials_in_cells_t)                      , intent(inout) :: mat_cell      
-        type(eos_wrapper_t), allocatable                                :: eos_c_wrap    
-        type(ideal_gas_t), target                                       :: ig_eos_c      
+        type(materials_in_cells_t), pointer                      , intent(inout) :: mat_cell
+        !        type(eos_wrapper_t), allocatable                                :: eos_c_wrap
+        !        type(ideal_gas_t), target                                       :: ig_eos_c
         integer :: nxp, nyp, nzp
         integer                                                         :: i, j, k, p, mat
         integer, dimension(:), allocatable                              :: witness_index
@@ -682,45 +701,26 @@ call Constructor%materials(tmp_mat)%cell_mass%Calculate_cell_mass&
         nyp = this%parallel_params%nyp
         nzp = this%parallel_params%nzp
 
-        allocate(eos_c_wrap)
-        eos_c_wrap%eos => ig_eos_c
+        !        allocate(eos_c_wrap)
+        !        eos_c_wrap%eos => ig_eos_c
         saw_index = .true.
         i = 1
         allocate(witness_index(0:df%n_materials))
         witness_index = -1
+        !        do i = 1, this%n_materials
+        !            this%total_eos(i) = eos_c_wrap
+        !        end do
 
-        saw_index = .false.
-        do k = 1, df%n_materials
-            saw_index = .false.
-            do j = 1, df%n_materials
-                if (witness_index(j) == df%mat_index(k)) then
-                    saw_index = .true.
-                end if
-            end do
-            if (saw_index .eqv. .false.) then
-                witness_index(k) = df%mat_index(k)
-                p = df%mat_index(k)
+        !                    write(*,*) "MATS", i, nxp, nyp, nzp, mat, df%mat_gamma_gas(mat),&
+        !                        df%mat_atomic_mass(mat), df%mat_z(mat), df%mat_z2(mat),&
+        !                        df%mat_rho_0(mat), df%init_temperature, df%mat_sie_0(mat)
+        this%materials = material_t(nxp, nyp, nzp, this%n_materials, df%mat_index, df%mat_gamma_gas,&
+            df%mat_atomic_mass, df%mat_z, df%mat_z2,&
+            df%mat_rho_0, df%init_temperature, df%mat_sie_0, mat_cell, bc_c_wrap_arr, this%boundary_params)
 
-                if (p == 0) cycle
-                if (df%mat_eos(p) == 0 .and. df%mat_index(k) /= 0 ) then 
-                    this%total_eos(i) = eos_c_wrap
-                end if
-                if (df%mat_index(k) /= 0 ) then
-                    mat = df%mat_index(k)
-allocate(mat1)
-!                    write(*,*) "MATS", i, nxp, nyp, nzp, mat, df%mat_gamma_gas(mat),&
-!                        df%mat_atomic_mass(mat), df%mat_z(mat), df%mat_z2(mat),&
-!                        df%mat_rho_0(mat), df%init_temperature, df%mat_sie_0(mat)
-                    mat1 = material_t(nxp, nyp, nzp, mat, df%mat_gamma_gas(mat),&
-                        df%mat_atomic_mass(mat), df%mat_z(mat), df%mat_z2(mat),&
-                        df%mat_rho_0(mat), df%init_temperature, df%mat_sie_0(mat), this%total_eos(mat)&
-                        , mat_cell, bc_c_wrap_arr, this%boundary_params)
-this%materials(i) = mat1
-write(*,*) i, mat, df%mat_atomic_mass(mat)
-                    i = i + 1
-                end if
-            end if
-        end do
+        !        nxp, nyp, nzp, nmats, mat_ids, gamma_gas, atomic_mass,&
+        !        num_protons, num_protons_2, rho_0, temperature_init, sie_0, eos, mat_cells, bc_cell&
+        !        , bc_params
         deallocate(witness_index)
     end subroutine Create_materials
 
@@ -757,23 +757,27 @@ write(*,*) i, mat, df%mat_atomic_mass(mat)
 
 
         integer                              :: i, j, k, tmp_mat
-        real(8), dimension(:, :, :), pointer :: sie_vof          
-        real(8), dimension(:, :, :), pointer :: cell_mass_vof    
+        real(8), dimension(:, :,:, :), pointer :: sie_vof
+        real(8), dimension(:, :,:, :), pointer :: cell_mass_vof
         real(8), dimension(:, :, :), pointer :: cell_mass    
         real(8), dimension(:, :, :), pointer :: sie
         real(8), dimension(:, :, :), pointer :: t
 
+        call this%materials%sie      %Point_to_data(sie_vof)
+        call this%materials%cell_mass%Point_to_data(cell_mass_vof)
+
         call this%total_sie%Point_to_data(sie)
         call this%total_cell_mass%Point_to_data(cell_mass)
-        do tmp_mat = 1, this%n_materials 
-            call this%materials(tmp_mat)%sie      %Point_to_data(sie_vof)
-            call this%materials(tmp_mat)%cell_mass%Point_to_data(cell_mass_vof)
-            call this%materials(tmp_mat)%Apply_eos(tmp_mat, this%materials(tmp_mat)%nrg_calc, this%nx, this%ny, this%nz,emf,.false.)
+        call this%materials%Apply_eos(this%nx, this%ny, this%nz,emf,.false.)
 
-            do k = 1, this%nz
-                do j = 1, this%ny
-                    do i = 1, this%nx
-                        sie(i, j, k) = sie(i, j, k) + sie_vof(i, j, k) * cell_mass_vof(i, j, k)
+
+        do k = 1, this%nz
+            do j = 1, this%ny
+                do i = 1, this%nx
+                    do tmp_mat = 1, this%n_materials
+
+                        sie(i, j, k) = sie(i, j, k) + sie_vof(tmp_mat, i, j, k) * cell_mass_vof(tmp_mat, i, j, k)
+
                     end do
                 end do
             end do

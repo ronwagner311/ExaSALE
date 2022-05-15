@@ -50,7 +50,7 @@ module quantity_module
             Ptr_coordinates_1d_first, &
             Ptr_coordinates_2d,       &
             Ptr_coordinates_3d,       &
-Ptr_coordinates_4d
+            Ptr_coordinates_4d
 
         procedure, public :: Clean_quantity
 
@@ -104,6 +104,7 @@ contains
         this%d3 = d3 - 1
         this%number_of_axises = axises_num
         this%boundary_params => bc_params
+        nullify(this%data_4d)
 
     end subroutine
 
@@ -128,7 +129,7 @@ contains
         this%d3 = d3 - 1
         this%number_of_axises = axises_num
         this%boundary_params => bc_params
-
+        nullify(this%data_4d)
     end subroutine
 
     subroutine Init_quantity_init_val_4d(this, initial_val, d1, d2, d3, d4, axises_num, bc_params)
@@ -151,10 +152,10 @@ contains
         this%d3 = d3 - 1
         this%number_of_axises = axises_num
         this%boundary_params => bc_params
-
+        nullify(this%data)
     end subroutine
 
-        subroutine Init_quantity_no_bc(this, initial_val, d1, d2, d3, d4, axises_num)
+    subroutine Init_quantity_no_bc(this, initial_val, d1, d2, d3, d4, axises_num)
         implicit none
         class(quantity_t) , intent(in out) :: this
         real(8)           , intent(in)     :: initial_val
@@ -172,7 +173,7 @@ contains
         this%d2 = d2 - 1
         this%d3 = d3 - 1
         this%number_of_axises = axises_num
-
+        nullify(this%data)
     end subroutine
 
     subroutine Init_quantity_no_init(this, d1, d2, d3, axises_num, bc_params)
@@ -185,7 +186,7 @@ contains
 
         integer           , intent(in)     :: axises_num
         integer                            :: i
-
+        nullify(this%data_4d)
         allocate (data_t :: this%data (axises_num))
         do i=1, axises_num
             this%data(i) = data_t (d1, d2, d3)
@@ -268,10 +269,14 @@ contains
         type(communication_t), pointer            :: comm
         type(communication_parameters_t), pointer :: comm_params
         integer :: i
-        do i=1, this%number_of_axises
-            call this%data(i)%Set_communication (comm, comm_params)
-        end do
-       this%parallel_params => comm%parallel_params
+        if (associated(this%data)) then
+            do i=1, this%number_of_axises
+                call this%data(i)%Set_communication (comm, comm_params)
+            end do
+        else
+            call this%data_4d%Set_communication(comm, comm_params)
+        end if
+        this%parallel_params => comm%parallel_params
     end subroutine Set_communication
 
 

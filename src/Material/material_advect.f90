@@ -63,7 +63,7 @@ contains
         use boundary_parameters_module, only : boundary_parameters_t
         implicit none
         integer                               , intent(in)           :: nmats
-        integer,dimension(:), pointer         , intent(in)           :: mat_ids
+        integer,dimension(:), allocatable         , intent(in)           :: mat_ids
 
         integer                               , intent(in)           :: nxp
         integer                               , intent(in)           :: nyp
@@ -114,8 +114,8 @@ contains
         real(8)       , dimension(:,:,:), pointer, intent(out)    :: ptr_top_in
         real(8)       , dimension(:,:,:), pointer, intent(out)    :: ptr_top_out
 
-        call this%area_top_in %Point_to_data (ptr_top_in)
-        call this%area_top_out%Point_to_data (ptr_top_out)
+!        call this%area_top_in %Point_to_data (ptr_top_in)
+!        call this%area_top_out%Point_to_data (ptr_top_out)
 
     end subroutine Point_to_areas
 
@@ -125,15 +125,15 @@ contains
         class (material_advect_t)                , intent(in out) :: this
         real(8)       , dimension(:,:,:), pointer, intent(out)    :: ptr_top_in
 
-        call this%area_top_in %Point_to_data (ptr_top_in)
+!        call this%area_top_in %Point_to_data (ptr_top_in)
     end subroutine Point_to_area_top_in
 
     subroutine Point_to_area_top_out (this, ptr_top_out)
         implicit none
         class (material_advect_t)                , intent(in out) :: this
         real(8)       , dimension(:,:,:), pointer, intent(out)    :: ptr_top_out
-
-        call this%area_top_out%Point_to_data (ptr_top_out)
+!
+!        call this%area_top_out%Point_to_data (ptr_top_out)
     end subroutine Point_to_area_top_out
 
 

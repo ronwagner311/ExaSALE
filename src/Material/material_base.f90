@@ -50,7 +50,7 @@ contains
       use boundary_parameters_module, only : boundary_parameters_t
       implicit none
       class(material_base_t)                , intent(in out)       :: this
-      integer,dimension(:), pointer         , intent(in)           :: mat_ids
+      integer,dimension(:), allocatable         , intent(in)           :: mat_ids
       integer                               , intent(in)           :: nxp           
       integer                               , intent(in)           :: nyp           
       integer                               , intent(in)           :: nzp           

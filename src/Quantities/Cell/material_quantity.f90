@@ -90,7 +90,6 @@ contains
       class (material_quantity_t)   , intent(in out) :: this
       logical, optional :: is_blocking
 
-      real(8), dimension (:,:,:), pointer        :: values
       integer                                    :: i, edge
       integer, dimension(:)     , pointer        :: ed_num
       logical :: is_blocking_local
@@ -101,8 +100,7 @@ contains
          is_blocking_local = is_blocking
       end if
 
-      call this%Point_to_data (1, values)
-      call this%boundary_params%Point_to_edges (ed_num)
+
 
       do i = 1, size(ed_num)
          edge = ed_num(i)

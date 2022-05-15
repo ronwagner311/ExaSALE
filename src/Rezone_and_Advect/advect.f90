@@ -37,10 +37,10 @@ module advect_module
         type (data_t)                                   :: area_top_out
         type (data_t)                                   :: area_top_in
 
-        type (data_t), pointer                          :: a
-        type (data_t), pointer                          :: b
-        type (data_t), pointer                          :: c
-        type (data_t), pointer                          :: side
+        type (material_quantity_t), pointer                          :: a
+        type (material_quantity_t), pointer                          :: b
+        type (material_quantity_t), pointer                          :: c
+        type (material_quantity_t), pointer                          :: side
 
         type (vertex_mass_t)                            :: adv_vertex_mass
         type (cell_mass_t)                              :: adv_cell_mass
@@ -195,7 +195,7 @@ contains
         type (material_t),  pointer, intent(inout) :: materials
         type(boundary_parameters_t)    , pointer, intent(in) :: bc_params
         integer                               , intent(in)           :: nmats
-        integer,dimension(:), pointer         , intent(in)           :: mat_ids
+        integer,dimension(:), allocatable         , intent(in)           :: mat_ids
         type (cell_bc_wrapper_t  ), dimension(:), pointer, intent(in) :: bcc
         type (vertex_bc_wrapper_t), dimension(:), pointer, intent(in) :: bcv
         real(8)                                          , intent(in) :: emf
@@ -243,10 +243,10 @@ contains
             Constructor%nz  = 1
         else
             Constructor%nz  = nzp - 1
-            Constructor%a = data_t(0d0, nxp, nyp, nzp)
-            Constructor%b = data_t(0d0, nxp, nyp, nzp)
-            Constructor%c = data_t(0d0, nxp, nyp, nzp)
-            Constructor%side = data_t(0d0, nxp, nyp, nzp)
+            Constructor%a = material_quantity_t(0d0, nxp, nyp, nzp, 1)
+            Constructor%b = material_quantity_t(0d0, nxp, nyp, nzp, 1)
+            Constructor%c = material_quantity_t(0d0, nxp, nyp, nzp, 1)
+            Constructor%side = material_quantity_t(0d0, nxp, nyp, nzp,1 )
         end if
 
         Constructor%nxp = nxp
@@ -691,7 +691,7 @@ contains
             f4 = 0.25d0 * (mat_vof(ind_mat,i , j , 1) * vol(i , j , 1) + mat_vof(ind_mat,i , jm, 1) * vol(i , jm, 1) + &
                 mat_vof(ind_mat,im, jm, 1) * vol(im, jm, 1) + mat_vof(ind_mat,im, j , 1) * vol(im, j , 1)) / &
                 (vol(i , j , 1) + vol(i , jm, 1) + vol(im, jm, 1) + vol(im, j , 1))
-        vof_temp = mat_vof(ind_mat, i, j, 1)
+            vof_temp = mat_vof(ind_mat, i, j, 1)
 
         else
             call this%total_vof%Point_to_data(vof)
@@ -710,7 +710,7 @@ contains
             f4 = 0.25d0 * (vof(i , j , 1) * vol(i , j , 1) + vof(i , jm, 1) * vol(i , jm, 1) + &
                 vof(im, jm, 1) * vol(im, jm, 1) + vof(im, j , 1) * vol(im, j , 1)) / &
                 (vol(i , j , 1) + vol(i , jm, 1) + vol(im, jm, 1) + vol(im, j , 1))
-        vof_temp = vof(i, j, 1)
+            vof_temp = vof(i, j, 1)
 
         end if
 
@@ -1305,6 +1305,10 @@ contains
         real(8), dimension(:, :, :), pointer :: mat_id
         real(8), dimension(:, :, :, :), pointer :: mat_vof
         real(8), dimension(:, :, :, :), pointer :: density_vof
+        real(8), dimension(:, :, :, :), pointer :: a_adv
+        real(8), dimension(:, :, :, :), pointer :: b_adv
+        real(8), dimension(:, :, :, :), pointer :: c_adv
+        real(8), dimension(:, :, :, :), pointer :: side_adv
         real(8), dimension(:, :, :, :), pointer :: a_mat, b_mat, c_mat, side_mat
         real(8), dimension(:, :, :, :), pointer :: cell_mass_vof
 
@@ -1325,6 +1329,10 @@ contains
         call this%adv_mats%b%Point_to_data(b_mat)
         call this%adv_mats%c%Point_to_data(c_mat)
         call this%adv_mats%side%Point_to_data(side_mat)
+        call this%a%Point_to_data(a_adv)
+        call this%b%Point_to_data(b_adv)
+        call this%c%Point_to_data(c_adv)
+        call this%side%Point_to_data(side_adv)
 
         do ii = 1, this%n_materials
             this%adv_mats%sxt1(ii) = 0d0
@@ -1347,10 +1355,10 @@ contains
         if (tot_vof(itd, jtd, k_donner) < this%emf) return
 
         if (tot_vof(itd, jtd, k_donner) < this%emf1) then
-            a = this%a%values(itd, jtd, k_donner)
-            b = this%b%values(itd, jtd, k_donner)
-            c = this%c%values(itd, jtd, k_donner)
-            side = this%side%values(itd, jtd, k_donner)
+            a = a_adv(1, itd, jtd, k_donner)
+            b = b_adv(1, itd, jtd, k_donner)
+            c = c_adv(1, itd, jtd, k_donner)
+            side = side_adv(1, itd, jtd, k_donner)
 
             ftph = (Volume_fraction_3d (xl1 , yl1 , zl1 , xl2 , yl2 , zl2 , xl3 , yl3 , zl3 , xlc1, ylc1, zlc1,                      &
                 x1  , y1  , z1  , x2  , y2  , z2  , x3  , y3  , z3  , xc1 , yc1 , zc1 , a, b, c, side, vol1) &
@@ -2085,22 +2093,22 @@ contains
         real(8), dimension(:, :, :), pointer :: cell_mass_adv
         real(8), dimension(:, :, :), pointer :: sie_adv
 
-        real(8), dimension(:, :, :), pointer :: cell_mass_vof_adv_fix
-        real(8), dimension(:, :, :), pointer :: cell_mass_vof_adv_max
-        real(8), dimension(:, :, :), pointer :: mat_vof_adv_fix
-        real(8), dimension(:, :, :), pointer :: mat_vof_adv_max
-        real(8), dimension(:, :, :), pointer :: sie_vof_adv_fix
-        real(8), dimension(:, :, :), pointer :: sie_vof_adv_max
+        real(8), dimension(:, :, :, :), pointer :: cell_mass_vof_adv_fix
+        real(8), dimension(:, :, :, :), pointer :: cell_mass_vof_adv_max
+        real(8), dimension(:, :, :, :), pointer :: mat_vof_adv_fix
+        real(8), dimension(:, :, :, :), pointer :: mat_vof_adv_max
+        real(8), dimension(:, :, :, :), pointer :: sie_vof_adv_fix
+        real(8), dimension(:, :, :, :), pointer :: sie_vof_adv_max
 
-        real(8), dimension(:, :, :), pointer :: density_vof_fix
-        real(8), dimension(:, :, :), pointer :: density_vof_max
-        real(8), dimension(:, :, :), pointer :: sie_vof_fix
-        real(8), dimension(:, :, :), pointer :: sie_vof_max
+        real(8), dimension(:, :, :, :), pointer :: density_vof_fix
+        real(8), dimension(:, :, :, :), pointer :: density_vof_max
+        real(8), dimension(:, :, :, :), pointer :: sie_vof_fix
+        real(8), dimension(:, :, :, :), pointer :: sie_vof_max
 
         real(8), dimension(:, :, :), pointer :: vol
 
-        real(8), dimension(:, :, :), pointer :: init_mat_layers
-        real(8), dimension(:, :, :), pointer :: init_mat_layers_adv
+        real(8), dimension(:, :, :, :), pointer :: init_mat_layers
+        real(8), dimension(:, :, :, :), pointer :: init_mat_layers_adv
 
         real(8), dimension(:, :, :), pointer :: momentum_x
         real(8), dimension(:, :, :), pointer :: momentum_y
@@ -2125,16 +2133,16 @@ contains
         call this%volume  %Point_to_data(vol)
 
         call this%materials%density %Point_to_data(density_vof_fix)
-        call this%materials(mat_max)%density %Point_to_data(density_vof_max)
-        call this%materials(mat_fix)%sie     %Point_to_data(sie_vof_fix)
-        call this%materials(mat_max)%sie     %Point_to_data(sie_vof_max)
+        call this%materials%density %Point_to_data(density_vof_max)
+        call this%materials%sie     %Point_to_data(sie_vof_fix)
+        call this%materials%sie     %Point_to_data(sie_vof_max)
 
-        call this%adv_mats(mat_fix)%cell_mass%Point_to_data(cell_mass_vof_adv_fix)
-        call this%adv_mats(mat_max)%cell_mass%Point_to_data(cell_mass_vof_adv_max)
-        call this%adv_mats(mat_fix)%vof      %Point_to_data(mat_vof_adv_fix)
-        call this%adv_mats(mat_max)%vof      %Point_to_data(mat_vof_adv_max)
-        call this%adv_mats(mat_fix)%sie      %Point_to_data(sie_vof_adv_fix)
-        call this%adv_mats(mat_max)%sie      %Point_to_data(sie_vof_adv_max)
+        call this%adv_mats%cell_mass%Point_to_data(cell_mass_vof_adv_fix)
+        call this%adv_mats%cell_mass%Point_to_data(cell_mass_vof_adv_max)
+        call this%adv_mats%vof      %Point_to_data(mat_vof_adv_fix)
+        call this%adv_mats%vof      %Point_to_data(mat_vof_adv_max)
+        call this%adv_mats%sie      %Point_to_data(sie_vof_adv_fix)
+        call this%adv_mats%sie      %Point_to_data(sie_vof_adv_max)
 
         call this%adv_cell_mass           %Point_to_data(cell_mass_adv)
         call this%adv_sie                    %Point_to_data(sie_adv)
@@ -2175,7 +2183,7 @@ contains
         sie_vof_adv_fix(mat_fix, i, j, 1) = (sie_vof_adv_fix(mat_fix, i, j, 1) * cell_mass_mat_vof_adv_fix_temp + &
             area_out_fix_diff * density_vof_fix(mat_fix, i, j ,1) * sie_vof_fix(mat_fix, i, j, 1)) &
             / (cell_mass_vof_adv_fix(mat_fix, ia, ja, 1) + 1d-30)
-        sie_vof_adv_max(i, j, 1) = (sie_vof_adv_max(mat_max, i, j, 1) * cell_mass_mat_vof_adv_max_temp + &
+        sie_vof_adv_max(mat_max, i, j, 1) = (sie_vof_adv_max(mat_max, i, j, 1) * cell_mass_mat_vof_adv_max_temp + &
             area_out_max_diff * density_vof_max(mat_max, i, j ,1) * sie_vof_max(mat_max, i, j, 1)) &
             / (cell_mass_vof_adv_max(mat_max, ia, ja, 1) + 1d-30)
 
@@ -2246,7 +2254,7 @@ contains
         real(8), dimension(:, :, :, :), pointer :: density_vof
         real(8), dimension(:, :, :, :), pointer :: cell_mass_vof
 
-        real(8), dimension(:, :, :, :), pointer :: vof_adv
+        real(8), dimension(:, :, :), pointer :: vof_adv
         real(8), dimension(:, :, :, :), pointer :: mat_vof_adv
         real(8), dimension(:, :, :, :), pointer :: sie_vof_adv
         real(8), dimension(:, :, :, :), pointer :: mat_cell_mass_adv
@@ -2749,9 +2757,7 @@ contains
 
                                 end if
 
-
-
-                                donnor_init_mat_layer = donnor_mass * init_mat_layers(id, jd, kd)
+                                donnor_init_mat_layer = donnor_mass * init_mat_layers(tmp_mat, id, jd, kd)
 
                                 init_mat_layers_adv(tmp_mat, i, j, k) = init_mat_layers_adv(tmp_mat, i, j, k) + donnor_init_mat_layer
 
@@ -2776,7 +2782,7 @@ contains
                     do tmp_mat=1,this%n_materials
 
                         mat_vof(tmp_mat,i, j, k) = (mat_vof(tmp_mat,i, j, k) * (vol(i, j, k) - vof_adv(i, j, k)) + mat_vof_adv(tmp_mat,i, j, k)) / vol(i, j, k)
-                        if (mat_vof(tmp_mat,i, j, k) > this%emf .and. mat_cell_mass_adv(i, j, k) > this%emfm) then
+                        if (mat_vof(tmp_mat,i, j, k) > this%emf .and. mat_cell_mass_adv(tmp_mat, i, j, k) > this%emfm) then
 
                             sie_vof(tmp_mat,i, j, k) = max(0d0, sie_vof_adv(tmp_mat,i, j, k) / mat_cell_mass_adv(tmp_mat,i, j, k))
                             init_mat_layers(tmp_mat,i, j, k) = init_mat_layers_adv(tmp_mat,i, j, k) / mat_cell_mass_adv(tmp_mat,i, j, k)
@@ -2810,10 +2816,10 @@ contains
         cell_mass = 0d0
         sie = 0d0
         n_materials_in_cell = 0d0
-            do k = 1, this%nz
-                do j = 1, this%ny
-                    do i = 1, this%nx
-                            do tmp_mat=1,this%n_materials
+        do k = 1, this%nz
+            do j = 1, this%ny
+                do i = 1, this%nx
+                    do tmp_mat=1,this%n_materials
 
                         if (mat_vof(tmp_mat,i, j, k) < this%emf .or. mat_cell_mass_adv(tmp_mat,i, j, k) < this%emfm) then
                             mat_cell_mass_adv(tmp_mat,i, j, k) = 0d0
@@ -2845,9 +2851,9 @@ contains
         call this%vertex_mass%Calculate_vertex_mass_3d(this%mesh%coordinates, this%total_density, &
             this%total_cell_mass)
         call this%vertex_mass%Exchange_virtual_space_blocking()
-        do tmp_mat=1, this%n_materials
-            call this%materials(tmp_mat)%vof%Exchange_virtual_space_blocking()
-        end do
+
+        call this%materials%vof%Exchange_virtual_space_blocking()
+
         do k = 1, this%nzp
             do j = 1, this%nyp
                 do i = 1, this%nxp
@@ -3070,14 +3076,14 @@ contains
         real(8), dimension(:, :, :), pointer :: vof
         real(8), dimension(:, :, :), pointer :: mat_id
         real(8), dimension(:, :, :), pointer :: n_materials_in_cell
-        real(8), dimension(:, :, :), pointer :: a1
-        real(8), dimension(:, :, :), pointer :: b1
-        real(8), dimension(:, :, :), pointer :: c2
-        real(8), dimension(:, :, :), pointer :: side1
+        real(8), dimension(:, :, :, :), pointer :: a1
+        real(8), dimension(:, :, :, :), pointer :: b1
+        real(8), dimension(:, :, :, :), pointer :: c2
+        real(8), dimension(:, :, :, :), pointer :: side1
 
-        real(8), dimension(:, :, :), pointer :: mat_vof
-        real(8), dimension(:, :, :), pointer :: density_vof
-        real(8), dimension(:, :, :), pointer :: cell_mass_vof
+        real(8), dimension(:, :, :, :), pointer :: mat_vof
+        real(8), dimension(:, :, :, :), pointer :: density_vof
+        real(8), dimension(:, :, :, :), pointer :: cell_mass_vof
         real(8) :: x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, x5, y5, z5, x6, y6, z6, x7, y7, z7, x8, y8, z8, vijk, vipjk&
             , vipjpk, &
             vijpk, vijkp, vipjkp, vipjpkp, vijpkp, volijk, dfdx, dfdy, dfdz, venc, cmax, cmin, fac, cn, cold, v1, v2, delc,&
@@ -3142,33 +3148,48 @@ contains
             fake_num_mats = this%n_materials
         end if
 
-        do tmp_mat = 1, fake_num_mats
-            if (nm /= 0) then
-                call this%materials(tmp_mat)%vof%Point_to_data(mat_vof)
-                call this%adv_mats(tmp_mat)%a%Point_to_data (a1)
-                call this%adv_mats(tmp_mat)%b%Point_to_data (b1)
-                call this%adv_mats(tmp_mat)%c%Point_to_data (c2)
-                call this%adv_mats(tmp_mat)%side%Point_to_data(side1)
-            else
-                call this%total_vof%Point_to_data(mat_vof)
-                call this%a%Point_to_data (a1)
-                call this%b%Point_to_data (b1)
-                call this%c%Point_to_data (c2)
-                call this%side%Point_to_data(side1)
-            end if
-            do k = k_start, k_end
-                do j = j_start, j_end
-                    do i = i_start, i_end
-                        c_flag = .true.
-                        if (nm /= 0 ) then
-                            if (n_materials_in_cell(i, j, k) <= 1) cycle
-                        else
-                            if (mat_vof(i, j, k) > this%emf1) then
-                                cycle
-                            end if
+        !        do tmp_mat = 1, fake_num_mats
+        if (nm /= 0) then
+            call this%materials%vof%Point_to_data(mat_vof)
+            call this%adv_mats%a%Point_to_data (a1)
+            call this%adv_mats%b%Point_to_data (b1)
+            call this%adv_mats%c%Point_to_data (c2)
+            call this%adv_mats%side%Point_to_data(side1)
+        else
+            call this%total_vof%Point_to_data(vof)
+            call this%a%Point_to_data (a1)
+            call this%b%Point_to_data (b1)
+            call this%c%Point_to_data (c2)
+            call this%side%Point_to_data(side1)
+        end if
+        do k = k_start, k_end
+            do j = j_start, j_end
+                do i = i_start, i_end
+
+                    if (nm /= 0) then
+                        if( n_materials_in_cell(i, j, k) <= 1) cycle
+
+                    else
+                        if (vof(i, j, k) > this%emf1) cycle
+                        if (vof(i,j,k) < this%emf) cycle
+                    end if
+
+
+                    do tmp_mat = 1, fake_num_mats
+                        if (nm /= 0) then
+                            if (mat_vof(tmp_mat, i,j,k) < this%emf) cycle
                         end if
 
-                        if (mat_vof(i, j, k) < this%emf) cycle
+                        c_flag = .true.
+                        !                        if (nm /= 0 ) then
+                        !                            if (n_materials_in_cell(i, j, k) <= 1) cycle
+                        !                        else
+                        !                            if (mat_vof(i, j, k) > this%emf1) then
+                        !                                cycle
+                        !                            end if
+                        !                        end if
+
+                        !                        if (mat_vof(i, j, k) < this%emf) cycle
                         ip = i + 1
                         im = i - 1
                         jp = j + 1
@@ -3201,7 +3222,8 @@ contains
                         y8 = y_lag(i, jp, kp)
                         z8 = z_lag(i, jp, kp)
 
-
+                        volijk = Hexahedron_volume(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, &
+                            x5, y5, z5, x6, y6, z6, x7, y7, z7, x8, y8, z8)
 
                         if (ip > this%nx .and. wall_x_top == .true.) ip = this%nx
                         if (im < 1       .and. wall_x_bot == .true.) im = 1
@@ -3210,42 +3232,76 @@ contains
                         if (kp > this%nz .and. wall_z_top == .true.) kp = this%nz
                         if (km < 1       .and. wall_z_bot == .true.) km = 1
 
-                        vijk    =  (mat_vof(i ,  j, k)   + mat_vof(im, j, k)   + mat_vof(i, j, km)+ &
-                            mat_vof(im,  j, km)  + mat_vof(i , jm, k)  + mat_vof(im, jm, k)+ &
-                            mat_vof(i , jm, km)  + mat_vof(im, jm, km)) / 8d0
+                        if (nm == 0) then
+                            vijk    =  (vof(i ,  j, k)   + vof(im, j, k)   + vof(i, j, km)+ &
+                                vof(im,  j, km)  + vof(i , jm, k)  + vof(im, jm, k)+ &
+                                vof(i , jm, km)  + vof(im, jm, km)) / 8d0
 
-                        vipjk   =  (mat_vof(ip, j, k)   + mat_vof(i, j, k)   + mat_vof(ip, j, km)+ &
-                            mat_vof(i, j, km)   + mat_vof(ip, jm, k) + mat_vof(i, jm, k)+ &
-                            mat_vof(ip, jm, km) + mat_vof(i, jm, km)) / 8d0
+                            vipjk   =  (vof(ip, j, k)   + vof(i, j, k)   + vof(ip, j, km)+ &
+                                vof(i, j, km)   + vof(ip, jm, k) + vof(i, jm, k)+ &
+                                vof(ip, jm, km) + vof(i, jm, km)) / 8d0
 
-                        vipjpk  =  (mat_vof(ip, jp, k)  + mat_vof(i, jp, k)  + &
-                            mat_vof(ip, jp, km) + mat_vof(i, jp, km) + mat_vof(ip, j, k)+ &
-                            mat_vof(i, j, k)    + mat_vof(ip, j, km) + mat_vof(i, j, km))/ 8d0
+                            vipjpk  =  (vof(ip, jp, k)  + vof(i, jp, k)  + &
+                                vof(ip, jp, km) + vof(i, jp, km) + vof(ip, j, k)+ &
+                                vof(i, j, k)    + vof(ip, j, km) + vof(i, j, km))/ 8d0
 
-                        vijpk   =  (mat_vof(i, jp, k)   + mat_vof(im, jp, k) + mat_vof(i, jp, km) + &
-                            mat_vof(im, jp, km) + mat_vof(i, j, k)   + mat_vof(im, j, k)  + &
-                            mat_vof(i, j, km)   + mat_vof(im, j, km))/ 8d0
+                            vijpk   =  (vof(i, jp, k)   + vof(im, jp, k) + vof(i, jp, km) + &
+                                vof(im, jp, km) + vof(i, j, k)   + vof(im, j, k)  + &
+                                vof(i, j, km)   + vof(im, j, km))/ 8d0
 
-                        vijkp   =  (mat_vof(i, j, kp) + mat_vof(im, j, kp) + mat_vof(i, j, k)+ &
-                            mat_vof(im, j, k) + mat_vof(i, jm, kp) + mat_vof(im, jm, kp)+ &
-                            mat_vof(i, jm, k) + mat_vof(im, jm, k))/ 8d0
+                            vijkp   =  (vof(i, j, kp) + vof(im, j, kp) + vof(i, j, k)+ &
+                                vof(im, j, k) + vof(i, jm, kp) + vof(im, jm, kp)+ &
+                                vof(i, jm, k) + vof(im, jm, k))/ 8d0
 
-                        vipjkp  =  (mat_vof(ip, j, kp) + mat_vof(i, j, kp)   + mat_vof(ip, j, k)  + &
-                            mat_vof(i, j, k)   + mat_vof(ip, jm, kp) + mat_vof(i, jm, kp) + &
-                            mat_vof(ip, jm, k) + mat_vof(i, jm, k))/ 8d0
+                            vipjkp  =  (vof(ip, j, kp) + vof(i, j, kp)   + vof(ip, j, k)  + &
+                                vof(i, j, k)   + vof(ip, jm, kp) + vof(i, jm, kp) + &
+                                vof(ip, jm, k) + vof(i, jm, k))/ 8d0
 
-                        vipjpkp =  (mat_vof(ip, jp, kp) + mat_vof(i, jp, kp) + &
-                            mat_vof(ip, jp, k)  + mat_vof(i, jp, k)  + mat_vof(ip, j, kp)+ &
-                            mat_vof(i, j, kp)   + mat_vof(ip, j, k)  + mat_vof(i, j, k))/ 8d0
+                            vipjpkp =  (vof(ip, jp, kp) + vof(i, jp, kp) + &
+                                vof(ip, jp, k)  + vof(i, jp, k)  + vof(ip, j, kp)+ &
+                                vof(i, j, kp)   + vof(ip, j, k)  + vof(i, j, k))/ 8d0
 
-                        vijpkp  =  (mat_vof(i, jp, kp) + mat_vof(im, jp, kp) + &
-                            mat_vof(i, jp, k)  + mat_vof(im, jp, k)  + mat_vof(i, j, kp)+ &
-                            mat_vof(im, j, kp) + mat_vof(i, j, k)    + mat_vof(im, j, k)) / 8d0
+                            vijpkp  =  (vof(i, jp, kp) + vof(im, jp, kp) + &
+                                vof(i, jp, k)  + vof(im, jp, k)  + vof(i, j, kp)+ &
+                                vof(im, j, kp) + vof(i, j, k)    + vof(im, j, k)) / 8d0
+                                vend = vof(i, j, k) * volijk
+
+                        else
+                            vijk    =  (mat_vof(tmp_mat, i ,  j, k)   + mat_vof(tmp_mat, im, j, k)   + mat_vof(tmp_mat, i, j, km)+ &
+                                mat_vof(tmp_mat, im,  j, km)  + mat_vof(tmp_mat, i , jm, k)  + mat_vof(tmp_mat, im, jm, k)+ &
+                                mat_vof(tmp_mat, i , jm, km)  + mat_vof(tmp_mat, im, jm, km)) / 8d0
+
+                            vipjk   =  (mat_vof(tmp_mat, ip, j, k)   + mat_vof(tmp_mat, i, j, k)   + mat_vof(tmp_mat, ip, j, km)+ &
+                                mat_vof(tmp_mat, i, j, km)   + mat_vof(tmp_mat, ip, jm, k) + mat_vof(tmp_mat, i, jm, k)+ &
+                                mat_vof(tmp_mat, ip, jm, km) + mat_vof(tmp_mat, i, jm, km)) / 8d0
+
+                            vipjpk  =  (mat_vof(tmp_mat, ip, jp, k)  + mat_vof(tmp_mat, i, jp, k)  + &
+                                mat_vof(tmp_mat, ip, jp, km) + mat_vof(tmp_mat, i, jp, km) + mat_vof(tmp_mat, ip, j, k)+ &
+                                mat_vof(tmp_mat, i, j, k)    + mat_vof(tmp_mat, ip, j, km) + mat_vof(tmp_mat, i, j, km))/ 8d0
+
+                            vijpk   =  (mat_vof(tmp_mat, i, jp, k)   + mat_vof(tmp_mat, im, jp, k) + mat_vof(tmp_mat, i, jp, km) + &
+                                mat_vof(tmp_mat, im, jp, km) + mat_vof(tmp_mat, i, j, k)   + mat_vof(tmp_mat, im, j, k)  + &
+                                mat_vof(tmp_mat, i, j, km)   + mat_vof(tmp_mat, im, j, km))/ 8d0
+
+                            vijkp   =  (mat_vof(tmp_mat, i, j, kp) + mat_vof(tmp_mat, im, j, kp) + mat_vof(tmp_mat, i, j, k)+ &
+                                mat_vof(tmp_mat, im, j, k) + mat_vof(tmp_mat, i, jm, kp) + mat_vof(tmp_mat, im, jm, kp)+ &
+                                mat_vof(tmp_mat, i, jm, k) + mat_vof(tmp_mat, im, jm, k))/ 8d0
+
+                            vipjkp  =  (mat_vof(tmp_mat, ip, j, kp) + mat_vof(tmp_mat, i, j, kp)   + mat_vof(tmp_mat, ip, j, k)  + &
+                                mat_vof(tmp_mat, i, j, k)   + mat_vof(tmp_mat, ip, jm, kp) + mat_vof(tmp_mat, i, jm, kp) + &
+                                mat_vof(tmp_mat, ip, jm, k) + mat_vof(tmp_mat, i, jm, k))/ 8d0
+
+                            vipjpkp =  (mat_vof(tmp_mat, ip, jp, kp) + mat_vof(tmp_mat, i, jp, kp) + &
+                                mat_vof(tmp_mat, ip, jp, k)  + mat_vof(tmp_mat, i, jp, k)  + mat_vof(tmp_mat, ip, j, kp)+ &
+                                mat_vof(tmp_mat, i, j, kp)   + mat_vof(tmp_mat, ip, j, k)  + mat_vof(tmp_mat, i, j, k))/ 8d0
+
+                            vijpkp  =  (mat_vof(tmp_mat, i, jp, kp) + mat_vof(tmp_mat, im, jp, kp) + &
+                                mat_vof(tmp_mat, i, jp, k)  + mat_vof(tmp_mat, im, jp, k)  + mat_vof(tmp_mat, i, j, kp)+ &
+                                mat_vof(tmp_mat, im, j, kp) + mat_vof(tmp_mat, i, j, k)    + mat_vof(tmp_mat, im, j, k)) / 8d0
+                                vend = mat_vof(tmp_mat, i, j, k) * volijk
+                        end if
 
 
-
-                        volijk = Hexahedron_volume(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, &
-                            x5, y5, z5, x6, y6, z6, x7, y7, z7, x8, y8, z8)
 
                         call Vector_grad_planes(y1, y2, y3, y4, y5, y6, y7, y8, &
                             z1, z2, z3, z4, z5, z6, z7, z8, y4y1z2z1z4z1y2y1, y5y1z4z1z5z1y4y1, y2y1z5z1z2z1y5y1, &
@@ -3275,9 +3331,6 @@ contains
                             x7x6y5y6y7y6x5x6, x2x6y7y6y2y6x7x6, x5x6y2y6y5y6x2x6, &
                             x8x7y6y7y8y7x6x7, x3x7y8y7y3y7x8x7, x6x7y3y7y6y7x3x7, &
                             x5x8y7y8y5y8x7x8, x4x8y5y8y4y8x5x8, x7x8y4y8y7y8x4x8)
-
-
-
 
                         call Vector_grad_vec(vijk, vipjk, vipjpk, vijpk, vijkp, vipjkp, vipjpkp, vijpkp,&
                             u1u2u4, u1u4u5, u1u2u5, &
@@ -3321,26 +3374,26 @@ contains
                             (u8u7u5 * x5x8y7y8y5y8x7x8 + u8u5u4 * x4x8y5y8y4y8x5x8 + u8u7u4 * x7x8y4y8y7y8x4x8))
 
                         if (abs(dfdz) < 1d-8) dfdz = sign(1d-8, dfdz)
-                        side1(i, j, k) = sign(1d0, dfdz)
-                        a1(i, j, k) = -dfdx / dfdz
-                        b1(i, j, k) = -dfdy / dfdz
+                        side1(tmp_mat, i, j, k) = sign(1d0, dfdz)
+                        a1(tmp_mat, i, j, k) = -dfdx / dfdz
+                        b1(tmp_mat, i, j, k) = -dfdy / dfdz
 
 
-                        vend = mat_vof(i, j, k) * volijk
+
                         cmax = -1d20
                         cmin = 1d20
                         do kk = 0, 1
                             do jj = 0, 1
                                 do ii = 0, 1
-                                    cmax = max(cmax, z_lag(i + ii,j + jj, k + kk) - a1(i, j, k)*x_lag(i + ii, j + jj, k + kk)- &
-                                        b1(i, j, k)*y_lag(i + ii, j + jj, k + kk))
-                                    cmin = min(cmin, z_lag(i + ii, j + jj, k + kk) - a1(i, j, k)*x_lag(i + ii, j + jj, k + kk)- &
-                                        b1(i, j, k)*y_lag(i + ii, j + jj, k + kk))
+                                    cmax = max(cmax, z_lag(i + ii,j + jj, k + kk) - a1(tmp_mat, i, j, k)*x_lag(i + ii, j + jj, k + kk)- &
+                                        b1(tmp_mat, i, j, k)*y_lag(i + ii, j + jj, k + kk))
+                                    cmin = min(cmin, z_lag(i + ii, j + jj, k + kk) - a1(tmp_mat, i, j, k)*x_lag(i + ii, j + jj, k + kk)- &
+                                        b1(tmp_mat, i, j, k)*y_lag(i + ii, j + jj, k + kk))
                                 end do
                             end do
                         end do
                         if(cmax == cmin) then
-                            c2(i, j, k) = cmax
+                            c2(tmp_mat, i, j, k) = cmax
                         end if
 
 
@@ -3348,32 +3401,32 @@ contains
                         cn = 0.5d0*(cmin + cmax)
                         do
                             cold = cn
-                            c2(i, j, k) = cn
+                            c2(tmp_mat, i, j, k) = cn
                             nnii = nnii + 1
                             if (nnii > 15) then
                                 exit
                             end if
                             v1 = Volume_fraction_3d (x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, &
                                 x5, y5, z5, x6, y6, z6, x7, y7, z7, x8, y8, z8, &
-                                a1(i, j, k), b1(i, j, k), c2(i, j, k), side1(i, j, k), volijk)
+                                a1(tmp_mat, i, j, k), b1(tmp_mat, i, j, k), c2(tmp_mat, i, j, k), side1(tmp_mat, i, j, k), volijk)
                             delc = 1d-7*(cmax - cmin)
-                            if (c2(i, j, k) + delc >= cmax) then
-                                if (abs(c2(i, j, k) - cmax) > 1d-8) then
-                                    delc = 0.9d0*(cmax - c2(i, j, k))
+                            if (c2(tmp_mat, i, j, k) + delc >= cmax) then
+                                if (abs(c2(tmp_mat, i, j, k) - cmax) > 1d-8) then
+                                    delc = 0.9d0*(cmax - c2(tmp_mat, i, j, k))
                                 else
-                                    delc = 0.1d0*(cmin - c2(i, j, k))
+                                    delc = 0.1d0*(cmin - c2(tmp_mat, i, j, k))
                                 end if
                             end if
-                            if (c2(i, j, k) + delc <= cmin) then
-                                if (abs(c2(i, j, k) - cmin) > 1d-8) then
-                                    delc = 0.9d0*(cmin - c2(i, j, k))
+                            if (c2(tmp_mat, i, j, k) + delc <= cmin) then
+                                if (abs(c2(tmp_mat, i, j, k) - cmin) > 1d-8) then
+                                    delc = 0.9d0*(cmin - c2(tmp_mat, i, j, k))
                                 else
-                                    delc = 0.1d0*(cmax - c2(i, j, k))
+                                    delc = 0.1d0*(cmax - c2(tmp_mat, i, j, k))
                                 end if
                             end if
-                            c1 = c2(i, j, k) + delc
+                            c1 = c2(tmp_mat, i, j, k) + delc
                             v2 = Volume_fraction_3d (x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, &
-                                x5, y5, z5, x6, y6, z6, x7, y7, z7, x8, y8, z8, a1(i, j, k), b1(i, j, k), c1, side1(i, j, k), volijk)
+                                x5, y5, z5, x6, y6, z6, x7, y7, z7, x8, y8, z8, a1(tmp_mat, i, j, k), b1(tmp_mat, i, j, k), c1, side1(tmp_mat, i, j, k), volijk)
                             if (abs(delc) < 1d-20) then
                                 exit
                             end if
@@ -3381,7 +3434,7 @@ contains
                             if (dvdc == 0) then
                                 exit
                             end if
-                            cn = c2(i, j, k) - (v1 - vend) / dvdc
+                            cn = c2(tmp_mat, i, j, k) - (v1 - vend) / dvdc
                             if (cn > cmax) then
                                 cn = 2*cmax - cn
                                 if (cn < cmin) cn = 0.5d0*(cmax + cmin)
@@ -3390,7 +3443,7 @@ contains
                                 if (cn >= cmax) cn = 0.5d0*(cmax + cmin)
                             end if
                             if (abs(v1 - vend) > 1d-1 * this%emf * volijk) cycle
-                            c2(i, j, k) = cn
+                            c2(tmp_mat, i, j, k) = cn
                             numit = max(nnii, numit)
                             c_flag = .false.
                             exit
@@ -3398,22 +3451,22 @@ contains
                         if (c_flag) then
                             vvmin = Volume_fraction_3d(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, &
                                 x5, y5, z5, x6, y6, z6, x7, y7, z7, x8, y8, z8, &
-                                a1(i, j, k), b1(i, j, k), cmin, side1(i, j, k), volijk)
+                                a1(tmp_mat, i, j, k), b1(tmp_mat, i, j, k), cmin, side1(tmp_mat, i, j, k), volijk)
 
                             vvmax = Volume_fraction_3d(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, &
                                 x5, y5, z5, x6, y6, z6, x7, y7, z7, x8, y8, z8, &
-                                a1(i, j, k), b1(i, j, k), cmax, side1(i, j, k), volijk)
+                                a1(tmp_mat, i, j, k), b1(tmp_mat, i, j, k), cmax, side1(tmp_mat, i, j, k), volijk)
                             nnii = 0
                             do
                                 cn = 0.5d0*(cmin + cmax)
                                 nnii = nnii + 1
                                 if (nnii > 50) then
-                                    c2(i, j, k) = cn
+                                    c2(tmp_mat, i, j, k) = cn
                                     exit
                                 end if
                                 v1 = Volume_fraction_3d(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, &
                                     x5, y5, z5, x6, y6, z6, x7, y7, z7, x8, y8, z8, &
-                                    a1(i, j, k), b1(i, j, k), cn, side1(i, j, k), volijk)
+                                    a1(tmp_mat, i, j, k), b1(tmp_mat, i, j, k), cn, side1(tmp_mat, i, j, k), volijk)
                                 if ((v1 < vend .and. vvmax > vvmin) .or.(v1 > vend .and. vvmax < vvmin)) then
                                     cmin = cn
                                 else
@@ -3424,7 +3477,7 @@ contains
                                 end if
                             end do
                         end if
-                        c2(i, j, k) = cn
+                        c2(tmp_mat, i, j, k) = cn
                     end do
                 end do
             end do
@@ -3438,7 +3491,7 @@ contains
         type(material_t), pointer, intent(out) :: material_ptr
         integer, intent(in) :: mat_index
 
-        material_ptr => this%materials(mat_index)
+!        material_ptr => this%materials(mat_index)
 
     end subroutine Point_to_material
 
@@ -3447,7 +3500,7 @@ contains
         type(material_advect_t), pointer, intent(out) :: adv_material_ptr
         integer, intent(in) :: mat_index
 
-        adv_material_ptr => this%adv_mats(mat_index)
+!        adv_material_ptr => this%adv_mats(mat_index)
 
     end subroutine Point_to_adv_material
 
@@ -3455,7 +3508,7 @@ contains
         class (advect_t), intent(in out) :: this
         real(8), dimension(:,:,:), pointer, intent(out) :: adv_vof_ptr
 
-        call this%vof_advect%Point_to_data(adv_vof_ptr)
+!        call this%vof_advect%Point_to_data(adv_vof_ptr)
 
     end subroutine Point_to_adv_vof_data
 
@@ -3463,7 +3516,7 @@ contains
         class (advect_t), intent(in out) :: this
         real(8), dimension(:,:,:), pointer, intent(out) :: adv_cell_mass_ptr
 
-        call this%adv_cell_mass%Point_to_data(adv_cell_mass_ptr)
+!        call this%adv_cell_mass%Point_to_data(adv_cell_mass_ptr)
 
     end subroutine Point_to_adv_cell_mass_data
 
@@ -3471,7 +3524,7 @@ contains
         class (advect_t), intent(in out) :: this
         real(8), dimension(:,:,:), pointer, intent(out) :: adv_sie_ptr
 
-        call this%adv_sie%Point_to_data(adv_sie_ptr)
+!        call this%adv_sie%Point_to_data(adv_sie_ptr)
 
     end subroutine Point_to_adv_sie_data
 
@@ -3479,7 +3532,7 @@ contains
         class (advect_t), intent(in out) :: this
         real(8), dimension(:,:,:), pointer, intent(out) :: momentum_i, momentum_j
 
-        call this%momentum%Point_to_data(momentum_i, momentum_j)
+!        call this%momentum%Point_to_data(momentum_i, momentum_j)
 
     end subroutine Point_to_momentum_data
 
@@ -3541,9 +3594,8 @@ contains
 
         call this%momentum%Set_communication(comm, comm_params_vertex)
 
-        do i = 1, this%n_materials
-            call this%adv_mats(i)%Set_communication_material_advect(comm, comm_params_cell)
-        end do
+            call this%adv_mats%Set_communication_material_advect(comm, comm_params_cell)
+
     end subroutine Set_communication
 
     subroutine Clean_advect (this)

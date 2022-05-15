@@ -10,21 +10,24 @@ module material_module
     use density_module                , only : density_t
     use temperature_module            , only : temperature_t
     use sound_velocity_module         , only : sound_velocity_t
+        use ideal_gas_module                , only : ideal_gas_t
+
     use cell_boundary_condition_module, only : cell_bc_wrapper_t
     use volume_module                 , only : volume_t
     use material_quantity_module      , only : material_quantity_t
     use material_base_module          , only : material_base_t
     use communication_module, only : communication_t
     use communication_parameters_module, only : communication_parameters_t
+
     implicit none
     private
 
     type, public, extends(material_base_t) :: material_t
         private
-        real(8), dimension(:), pointer           :: atomic_mass
-        real(8), dimension(:), pointer                        :: num_protons
-        real(8), dimension(:), pointer                        :: num_protons_2
-        real(8), dimension(:), pointer                        :: gamma_gas
+        real(8), dimension(:),public, pointer           :: atomic_mass
+        real(8), dimension(:),public, pointer                        :: num_protons
+        real(8), dimension(:), public,pointer                        :: num_protons_2
+        real(8), dimension(:), public,pointer                        :: gamma_gas
         type (material_quantity_t),pointer, public       :: pressure
         type (material_quantity_t),pointer, public :: sound_vel
         type (material_quantity_t),pointer, public    :: temperature
@@ -60,27 +63,38 @@ module material_module
 contains
 
     type(material_t) function Constructor(nxp, nyp, nzp, nmats, mat_ids, gamma_gas, atomic_mass,&
-        num_protons, num_protons_2, rho_0, temperature_init, sie_0, eos, mat_cells, bc_cell&
+        num_protons, num_protons_2, rho_0, temperature_init, sie_0, mat_cells, bc_cell&
         , bc_params)
         use boundary_parameters_module, only : boundary_parameters_t
 
         implicit none
-        type (eos_wrapper_t), dimension(:), pointer                  , intent(in out)       :: eos
-        integer, dimension(:), pointer        , intent(in)           :: mat_ids
+!        type (eos_wrapper_t), dimension(:), pointer                  , intent(in out)       :: eos
+        integer, dimension(:), allocatable        , intent(in)           :: mat_ids
         integer                               , intent(in)           :: nxp
         integer                               , intent(in)           :: nyp
         integer                               , intent(in)           :: nzp
         integer                               , intent(in)           :: nmats
-        real(8), dimension(:), pointer                               , intent(in)           :: atomic_mass
-        real(8) , dimension(:), pointer                              , intent(in)           :: gamma_gas
-        real(8), dimension(:), pointer                               , intent(in)           :: rho_0
-        real(8), dimension(:), pointer                               , intent(in)           :: sie_0
+        real(8), dimension(:), allocatable                               , intent(in)           :: atomic_mass
+        real(8) , dimension(:), allocatable                              , intent(in)           :: gamma_gas
+        real(8), dimension(:), allocatable                               , intent(in)           :: rho_0
+        real(8), dimension(:), allocatable                               , intent(in)           :: sie_0
         real(8)                               , intent(in)           :: temperature_init
-        real(8), dimension(:), pointer                               , intent(in)           :: num_protons
-        real(8), dimension(:), pointer                               , intent(in)           :: num_protons_2
-        type(materials_in_cells_t)            , intent(in out)       :: mat_cells
+        real(8), dimension(:), allocatable                               , intent(in)           :: num_protons
+        real(8), dimension(:), allocatable                               , intent(in)           :: num_protons_2
+        type(materials_in_cells_t)   ,pointer         , intent(in out)       :: mat_cells
         type(cell_bc_wrapper_t), dimension(:), pointer,  intent(inout) :: bc_cell
         type(boundary_parameters_t), pointer, intent(in) :: bc_params
+
+!        type(materials_in_cells_t)   ,pointer                :: mat_cells
+!        type(cell_bc_wrapper_t), dimension(:), pointer:: bc_cell
+!        type(boundary_parameters_t), pointer :: bc_params
+!        real(8), dimension(:), pointer                                          :: atomic_mass
+!        real(8) , dimension(:), pointer                                         :: gamma_gas
+!        real(8), dimension(:), pointer                                         :: rho_0
+!        real(8), dimension(:), pointer                                          :: sie_0
+!        real(8)                                          :: temperature_init
+!        real(8), dimension(:), pointer                                          :: num_protons
+!        real(8), dimension(:), pointer                                          :: num_protons_2
 
         real(8), dimension (:,:,:,:), pointer                          :: density_vof
         real(8), dimension (:,:,:,:), pointer                          :: sie_vof
@@ -89,7 +103,12 @@ contains
         real(8), dimension (:,:,:), pointer                          :: mat_cell
         real(8), dimension (:,:,:,:), pointer                          :: delete
         real(8), dimension (:,:,:,:), pointer                          :: delete2
+        type(eos_wrapper_t), allocatable                                :: eos_c_wrap
+        type(ideal_gas_t), target                                       :: ig_eos_c
+
+
         integer                                                      :: i, j, k, m
+
         allocate(Constructor%dp_de)
         allocate(Constructor%dp_drho)
         allocate(Constructor%dt_de)
@@ -99,8 +118,13 @@ contains
         allocate(Constructor%temperature_old)
         allocate(Constructor%sound_vel)
         allocate(Constructor%density)
-        allocate(Constructor%equation_of_state(nmats))
         allocate(Constructor%nrg_calc(nmats))
+        allocate(Constructor%num_protons_2(nmats))
+        allocate(Constructor%num_protons(nmats))
+        allocate(Constructor%gamma_gas(nmats))
+        allocate(Constructor%atomic_mass(nmats))
+        allocate(eos_wrapper_t :: Constructor%equation_of_state (nmats))
+
 
         call Constructor%Init_material_base(nxp, nyp, nzp, nmats, mat_ids, bc_cell, bc_params)
 
@@ -115,15 +139,18 @@ contains
         Constructor%temperature_old = material_quantity_t (0d0, nxp, nyp, nzp, nmats, bc_cell, bc_params)
         Constructor%sound_vel = material_quantity_t (0d0, nxp, nyp, nzp, nmats, bc_cell, bc_params)
 
+        allocate(eos_c_wrap)
+        eos_c_wrap%eos => ig_eos_c
+
         do i = 1, nmats
-            Constructor%equation_of_state(i)%eos => eos(i)%eos
+            Constructor%equation_of_state(i) = eos_c_wrap
         end do
 
 
-        Constructor%atomic_mass => atomic_mass
-        Constructor%num_protons => num_protons
-        Constructor%num_protons_2 => num_protons_2
-        Constructor%gamma_gas => gamma_gas
+        Constructor%atomic_mass = atomic_mass
+        Constructor%num_protons = num_protons
+        Constructor%num_protons_2 = num_protons_2
+        Constructor%gamma_gas = gamma_gas
         call Constructor%density%Point_to_data(density_vof)
         call Constructor%vof%Point_to_data(mat_vof)
         call Constructor%temperature%Point_to_data(temp)
@@ -154,10 +181,10 @@ contains
         write(*,*) " you built this beauty!"
     end function
 
-    subroutine Apply_eos(this, mat_num, nx, ny, nz, emf, is_old_temperature)
+    subroutine Apply_eos(this, nx, ny, nz, emf, is_old_temperature)
         class(material_t)                  , intent(in out)    :: this
 
-        integer                            , intent(in    ) :: mat_num
+!        integer                            , intent(in    ) :: mat_num
 
 !        integer                            , intent(in    ) :: nrg_or_tmp
         integer                            , intent(in    ) :: nx
@@ -195,10 +222,10 @@ contains
         do m = 1, this%nmats
             call this%equation_of_state(m)%eos%Calculate(p, sound_vel, rho, e, &
                 dp_de_p, dp_drho_p, dt_de_p, dt_drho_p, this%gamma_gas(m), this%atomic_mass(m), &
-                t, mat_num, this%nrg_calc(m),&
+                t, m, this%nrg_calc(m),&
                 nx, ny, nz, mat_vof, emf)
         end do
-        this%nrg_calc = 1
+        this%nrg_calc = 0
 
     end subroutine Apply_eos
 

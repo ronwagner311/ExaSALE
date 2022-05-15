@@ -60,17 +60,17 @@ module datafile_module
         integer, public                              :: number_layers_i  
         integer, public                              :: number_layers_j  
         integer, public                              :: number_layers_k  
-        integer, dimension(:), allocatable, public   :: number_cells_i   
-        integer, dimension(:), allocatable, public   :: number_cells_j   
-        integer, dimension(:), allocatable, public   :: number_cells_k   
+        integer, dimension(:), allocatable, public   :: number_cells_i
+        integer, dimension(:), allocatable, public   :: number_cells_j
+        integer, dimension(:), allocatable, public   :: number_cells_k
 
 
         integer                           , public   :: reduct_num_mat   
         integer                           , public   :: n_materials   
-        integer, dimension(:), allocatable, public   :: mat_index 
-        integer, dimension(:), allocatable, public   :: mat_eos   
-        real(8), dimension(:), allocatable, public   :: mat_atomic_mass 
-        real(8), dimension(:), allocatable, public   :: mat_z 
+        integer, dimension(:), allocatable, public   :: mat_index
+        integer, dimension(:), allocatable, public   :: mat_eos
+        real(8), dimension(:), allocatable, public   :: mat_atomic_mass
+        real(8), dimension(:), allocatable, public   :: mat_z
         real(8), dimension(:), allocatable, public   :: mat_z2
         real(8), dimension(:), allocatable, public   :: mat_rho_0
         real(8), dimension(:), allocatable, public   :: mat_sie_0

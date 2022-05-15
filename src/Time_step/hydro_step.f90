@@ -73,10 +73,10 @@ module hydro_step_module
         type (data_t)                  , pointer :: dvelocity_y_dz       
         type (data_t)                  , pointer :: dvelocity_z_dz       
         type (parallel_parameters_t)   , pointer :: parallel_params      
-        type (material_t), dimension(:), pointer :: materials
+        type (material_t),  pointer :: materials
 
         integer :: wilkins_scheme    
-        integer, public                           :: n_materials          
+        integer, public                           :: nmats
         integer, public                           :: nxp, nyp, nzp, nz, nx, ny
         real(8), public                           :: emf, emfm 
         real(8) :: init_temperature
@@ -248,7 +248,7 @@ contains
         total_temperature, total_cell_mass, previous_cell_mass, vertex_mass, &
         previous_vertex_mass, inversed_vertex_mass, total_sound_vel,&
         a_visc, total_dp_de, total_dp_drho, total_dt_de, total_dt_drho, init_temperature, &
-        n_materials, materials, num_mat_cells, mat_id, emf, emfm, parallel_params)
+        nmats, materials, num_mat_cells, mat_id, emf, emfm, parallel_params, mat_ids)
         implicit none
         type(datafile_t), intent(in) :: df 
 
@@ -261,7 +261,7 @@ contains
 
         integer, intent(in) :: wilkins_scheme
 
-        integer, intent(in) :: n_materials      
+        integer, intent(in) :: nmats
         real(8), intent(in) :: init_temperature 
         real(8), intent(in) :: emf              
         real(8), intent(in) :: emfm             
@@ -293,7 +293,9 @@ contains
         type (num_materials_in_cells_t), pointer, intent(in) :: num_mat_cells 
         type (materials_in_cells_t)    , pointer, intent(in) :: mat_id     
 
-        type (material_t), dimension(:), pointer, intent(inout) :: materials     
+        type (material_t), pointer, intent(inout) :: materials
+        integer,dimension(:), allocatable         , intent(in)           :: mat_ids
+
 
         Constructor%init_temperature     =  init_temperature
         Constructor%nx                   =  nx
@@ -305,7 +307,7 @@ contains
         Constructor%emf                  =  emf
         Constructor%emfm                 =  emfm
         Constructor%wilkins_scheme       =  wilkins_scheme
-        Constructor%n_materials          =  n_materials
+        Constructor%nmats          =  nmats
         Constructor%num_mat_cells        => num_mat_cells
         Constructor%mat_id               => mat_id
         Constructor%mesh                 => mesh
@@ -339,7 +341,9 @@ contains
             total_cell_mass%boundary_params)
         allocate(Constructor%advect)
 
-        Constructor%advect = advect_t(n_materials, nxp, nyp, nzp, total_cell_mass%boundary_conditions, velocity%boundary_conditions, &
+
+
+        Constructor%advect = advect_t(nxp, nyp, nzp,nmats, mat_ids, total_cell_mass%boundary_conditions, velocity%boundary_conditions, &
             total_cell_mass%boundary_params&
             ,df%line_calc, df%shorter_advect, df%fix_overflow, Constructor%rezone, mesh, &
             materials, mat_id, num_mat_cells, &
@@ -445,17 +449,17 @@ contains
         real(8), dimension(:, :, :), pointer :: sie                   
         real(8), dimension(:, :, :), pointer :: vof                   
 
-        real(8), dimension(:, :, :), pointer :: temperature_vof_old 
-        real(8), dimension(:, :, :), pointer :: temperature_vof     
-        real(8), dimension(:, :, :), pointer :: cell_mass_vof       
-        real(8), dimension(:, :, :), pointer :: pressure_vof        
-        real(8), dimension(:, :, :), pointer :: density_vof         
-        real(8), dimension(:, :, :), pointer :: dp_drho_vof         
-        real(8), dimension(:, :, :), pointer :: dp_de_vof           
-        real(8), dimension(:, :, :), pointer :: dt_de_vof           
-        real(8), dimension(:, :, :), pointer :: sie_vof             
-        real(8), dimension(:, :, :), pointer :: mat_vof             
-        real(8), dimension(:, :, :), pointer :: sound_vel_vof
+        real(8), dimension(:, :, :, :), pointer :: temperature_vof_old
+        real(8), dimension(:, :, :, :), pointer :: temperature_vof
+        real(8), dimension(:, :, :, :), pointer :: cell_mass_vof
+        real(8), dimension(:, :, :, :), pointer :: pressure_vof
+        real(8), dimension(:, :, :, :), pointer :: density_vof
+        real(8), dimension(:, :, :, :), pointer :: dp_drho_vof
+        real(8), dimension(:, :, :, :), pointer :: dp_de_vof
+        real(8), dimension(:, :, :, :), pointer :: dt_de_vof
+        real(8), dimension(:, :, :, :), pointer :: sie_vof
+        real(8), dimension(:, :, :, :), pointer :: mat_vof
+        real(8), dimension(:, :, :, :), pointer :: sound_vel_vof
         real(8), dimension(:, :, :), pointer :: reem,reem1,reem2,reem3
 
         real(8), dimension(:, :, :), allocatable :: dt_de_temp 
@@ -482,11 +486,9 @@ contains
         call this%mat_id%Exchange_virtual_space_nonblocking()
         call this%num_mat_cells%Exchange_virtual_space_nonblocking()
         call this%total_vof%Exchange_virtual_space_nonblocking()
-        do tmp_mat = 1, this%n_materials
-            call this%materials(tmp_mat)%vof%Exchange_virtual_space_nonblocking()
-            call this%materials(tmp_mat)%sie%Exchange_virtual_space_nonblocking()
-            call this%materials(tmp_mat)%cell_mass%Exchange_virtual_space_nonblocking()
-        end do
+        call this%materials%vof%Exchange_virtual_space_nonblocking()
+        call this%materials%sie%Exchange_virtual_space_nonblocking()
+        call this%materials%cell_mass%Exchange_virtual_space_nonblocking()
 
 
         call this%total_pressure_sum  %Point_to_data(pressure_sum)
@@ -504,7 +506,15 @@ contains
         call this%inversed_vertex_mass%Point_to_data(inversed_vertex_mass)
         call this%vertex_mass   %Point_to_data(vertex_mass)
 
-
+        call this%materials%temperature%Point_to_data(temperature_vof)
+        call this%materials%pressure   %Point_to_data(pressure_vof)
+        call this%materials%dp_drho    %Point_to_data(dp_drho_vof)
+        call this%materials%dp_de      %Point_to_data(dp_de_vof)
+        call this%materials%cell_mass      %Point_to_data(cell_mass_vof)
+        call this%materials%sound_vel      %Point_to_data(sound_vel_vof)
+        call this%materials%pressure       %Point_to_data(pressure_vof)
+        call this%materials%dt_de          %Point_to_data(dt_de_vof)
+        call this%materials%vof            %Point_to_data(mat_vof)
 
 
         call this%Calculate_density(this%total_volume)
@@ -515,19 +525,17 @@ contains
         pressure    = 0d0
         dp_drho     = 0d0
         dp_de       = 0d0
-        do tmp_mat = 1, this%n_materials
-            call this%materials(tmp_mat)%temperature%Point_to_data(temperature_vof)
-            call this%materials(tmp_mat)%pressure   %Point_to_data(pressure_vof)
-            call this%materials(tmp_mat)%dp_drho    %Point_to_data(dp_drho_vof)
-            call this%materials(tmp_mat)%dp_de      %Point_to_data(dp_de_vof)
-            do k = 1, this%nz
-                do j = 1, this%ny
-                    do i = 1, this%nx
+
+        do k = 1, this%nz
+            do j = 1, this%ny
+                do i = 1, this%nx
+                    do tmp_mat = 1, this%nmats
+
                         if (vof(i, j, k) >= this%emf) then
-                            temperature_vof(i, j, k) = 0d0
-                            pressure_vof   (i, j, k) = 0d0
-                            dp_drho_vof    (i, j, k) = 0d0
-                            dp_de_vof      (i, j, k) = 0d0
+                            temperature_vof(tmp_mat, i, j, k) = 0d0
+                            pressure_vof   (tmp_mat, i, j, k) = 0d0
+                            dp_drho_vof    (tmp_mat, i, j, k) = 0d0
+                            dp_de_vof      (tmp_mat, i, j, k) = 0d0
                         end if
                     end do
                 end do
@@ -545,35 +553,27 @@ contains
         call this%mat_id%Exchange_end()
         call this%num_mat_cells%Exchange_end()
         call this%total_vof%Exchange_end()
-        do tmp_mat = 1, this%n_materials
-            call this%materials(tmp_mat)%vof%Exchange_end()
-            call this%materials(tmp_mat)%sie%Exchange_end()
-            call this%materials(tmp_mat)%cell_mass%Exchange_end()
-        end do
+        call this%materials%vof%Exchange_end()
+        call this%materials%sie%Exchange_end()
+        call this%materials%cell_mass%Exchange_end()
 
-        do tmp_mat = 1, this%n_materials
-            call this%materials(tmp_mat)%Apply_eos(tmp_mat, 0, this%nx, this%ny, this%nz, this%emf, .true.) 
-write(*,*) "mat:", tmp_mat
-            call this%materials(tmp_mat)%temperature_old%Point_to_data(temperature_vof_old)
-            call this%materials(tmp_mat)%cell_mass      %Point_to_data(cell_mass_vof)
-            call this%materials(tmp_mat)%sound_vel      %Point_to_data(sound_vel_vof)
-            call this%materials(tmp_mat)%pressure       %Point_to_data(pressure_vof)
-            call this%materials(tmp_mat)%dp_drho        %Point_to_data(dp_drho_vof)
-            call this%materials(tmp_mat)%dp_de          %Point_to_data(dp_de_vof)
-            call this%materials(tmp_mat)%dt_de          %Point_to_data(dt_de_vof)
-            call this%materials(tmp_mat)%vof            %Point_to_data(mat_vof)
+        call this%materials%Apply_eos(this%nx, this%ny, this%nz, this%emf, .true.)
 
-            do k = 1, this%nz
-                do j = 1, this%ny
-                    do i = 1, this%nx
-                        if (mat_vof(i, j, k) <= this%emf) cycle
+
+
+        do k = 1, this%nz
+            do j = 1, this%ny
+                do i = 1, this%nx
+                    do tmp_mat = 1, this%nmats
+
+                        if (mat_vof(tmp_mat, i, j, k) <= this%emf) cycle
                         temperature(i, j, k) = temperature(i, j, k) + &
-                            temperature_vof_old(i, j, k) * cell_mass_vof(i, j, k) / (dt_de_vof(i, j, k) + 1d-30)
-                        sound_vel  (i, j, k) = sound_vel  (i, j, k) + sound_vel_vof(i, j, k) * mat_vof(i, j, k)
-                        pressure   (i, j, k) = pressure   (i, j, k) + pressure_vof (i, j, k) * mat_vof(i, j, k)
-                        dp_drho    (i, j, k) = dp_drho    (i, j, k) + dp_drho_vof  (i, j, k) * mat_vof(i, j, k)
-                        dp_de      (i, j, k) = dp_de      (i, j, k) + cell_mass_vof(i, j, k) / (dp_de_vof(i, j, k) + 1d-30)
-                        dt_de_temp (i, j, k) = dt_de_temp (i, j, k) + cell_mass_vof(i, j, k) / (dt_de_vof(i, j ,k) + 1d-30)
+                            temperature_vof_old(tmp_mat, i, j, k) * cell_mass_vof(tmp_mat, i, j, k) / (dt_de_vof(tmp_mat, i, j, k) + 1d-30)
+                        sound_vel  (i, j, k) = sound_vel  (i, j, k) + sound_vel_vof(tmp_mat, i, j, k) * mat_vof(tmp_mat, i, j, k)
+                        pressure   (i, j, k) = pressure   (i, j, k) + pressure_vof (tmp_mat, i, j, k) * mat_vof(tmp_mat, i, j, k)
+                        dp_drho    (i, j, k) = dp_drho    (i, j, k) + dp_drho_vof  (tmp_mat, i, j, k) * mat_vof(tmp_mat, i, j, k)
+                        dp_de      (i, j, k) = dp_de      (i, j, k) + cell_mass_vof(tmp_mat, i, j, k) / (dp_de_vof(tmp_mat, i, j, k) + 1d-30)
+                        dt_de_temp (i, j, k) = dt_de_temp (i, j, k) + cell_mass_vof(tmp_mat, i, j, k) / (dt_de_vof(tmp_mat, i, j ,k) + 1d-30)
                     end do
                 end do
             end do
@@ -617,13 +617,10 @@ write(*,*) "mat:", tmp_mat
         call this%total_volume %Apply_boundary(.false.)
         call this%total_sie    %Apply_boundary(.false.)
         call this%total_vof    %Apply_boundary(.false.)
-        do tmp_mat = 1, this%n_materials
-            call this%materials(tmp_mat)%cell_mass%Apply_boundary(.false.)
-            call this%materials(tmp_mat)%density  %Apply_boundary(.false.)
-            call this%materials(tmp_mat)%sie      %Apply_boundary(.false.)
-            call this%materials(tmp_mat)%vof      %Apply_boundary(.false.)
-        end do
-
+        call this%materials%cell_mass%Apply_boundary(.false.)
+        call this%materials%density  %Apply_boundary(.false.)
+        call this%materials%sie      %Apply_boundary(.false.)
+        call this%materials%vof      %Apply_boundary(.false.)
 
 
         if (this%mesh%dimension == 2) then
@@ -637,12 +634,10 @@ write(*,*) "mat:", tmp_mat
         call this%total_volume %Exchange_end()
         call this%total_sie    %Exchange_end()
         call this%total_vof    %Exchange_end()
-        do tmp_mat = 1, this%n_materials
-            call this%materials(tmp_mat)%cell_mass%Exchange_end()
-            call this%materials(tmp_mat)%density  %Exchange_end()
-            call this%materials(tmp_mat)%sie      %Exchange_end()
-            call this%materials(tmp_mat)%vof      %Exchange_end()
-        end do
+        call this%materials%cell_mass%Exchange_end()
+        call this%materials%density  %Exchange_end()
+        call this%materials%sie      %Exchange_end()
+        call this%materials%vof      %Exchange_end()
 
         call this%vertex_mass%Exchange_virtual_space_blocking()
 
@@ -658,9 +653,9 @@ write(*,*) "mat:", tmp_mat
         real(8), dimension(:, :, :), pointer :: density        
         real(8), dimension(:, :, :), pointer :: vol            
         real(8), dimension(:, :, :), pointer :: vof            
-        real(8), dimension(:, :, :), pointer :: cell_mass_vof  
-        real(8), dimension(:, :, :), pointer :: density_vof    
-        real(8), dimension(:, :, :), pointer :: mat_vof        
+        real(8), dimension(:, :, :, :), pointer :: cell_mass_vof
+        real(8), dimension(:, :, :, :), pointer :: density_vof
+        real(8), dimension(:, :, :, :), pointer :: mat_vof
 
         integer :: i, j, k     
         integer :: tmp_mat  
@@ -668,7 +663,11 @@ write(*,*) "mat:", tmp_mat
         call this%total_density  %Point_to_data(density)
         call this%total_cell_mass%Point_to_data(cell_mass)
         call this%total_vof      %Point_to_data(vof)
+        call this%materials%density%Point_to_data(cell_mass_vof)
+        call this%materials%density  %Point_to_data(density_vof)
+        call this%materials%vof      %Point_to_data(mat_vof)
         call volume%Point_to_data(vol)
+
         do k = 1, this%nz
             do j = 1, this%ny
                 do i = 1, this%nx
@@ -677,18 +676,15 @@ write(*,*) "mat:", tmp_mat
             end do
         end do
 
-        do tmp_mat = 1, this%n_materials
-!write(*,*) "hydro step:", tmp_mat
-            call this%materials(tmp_mat)%density%Point_to_data(cell_mass_vof)
-            call this%materials(tmp_mat)%density  %Point_to_data(density_vof)
-            call this%materials(tmp_mat)%vof      %Point_to_data(mat_vof)
-            do k = 1, this%nz
-                do j = 1, this%ny
-                    do i = 1, this%nx
-                        density_vof(i, j, k) = 0d0
+        do k = 1, this%nz
+            do j = 1, this%ny
+                do i = 1, this%nx
+                    do tmp_mat = 1, this%nmats
+
+                        density_vof(tmp_mat, i, j, k) = 0d0
                         if (vof(i, j, k) < this%emf) cycle
-                        if (mat_vof(i, j, k) > this%emf) then
-                            density_vof(i, j, k) = cell_mass_vof(i, j, k) / (vol(i, j, k) * mat_vof(i, j, k))
+                        if (mat_vof(tmp_mat, i, j, k) > this%emf) then
+                            density_vof(tmp_mat, i, j, k) = cell_mass_vof(tmp_mat, i, j, k) / (vol(i, j, k) * mat_vof(tmp_mat, i, j, k))
                         end if
                     end do
                 end do
@@ -890,7 +886,7 @@ write(*,*) "mat:", tmp_mat
 
 
         call this%velocity%Calculate_derivatives(this%mesh%coordinates, &
-                                                this%total_vof, this%total_volume, this%nx, this%ny, this%nz, this%emf)
+            this%total_vof, this%total_volume, this%nx, this%ny, this%nz, this%emf)
     end subroutine Calculate_acceleration_3d
 
     subroutine Calculate_artificial_viscosity_2d(this, time, wilkins_scheme)
@@ -1511,7 +1507,7 @@ write(*,*) "mat:", tmp_mat
         real(8), dimension(:, :, :), pointer :: x            
         real(8), dimension(:, :, :), pointer :: y            
 
-        real(8), dimension(:, :, :), pointer :: n_materials_in_cell 
+        real(8), dimension(:, :, :), pointer :: nmats_in_cell
 
         real(8), dimension(:, :, :), pointer :: temperature  
         real(8), dimension(:, :, :), pointer :: cell_mass    
@@ -1523,14 +1519,14 @@ write(*,*) "mat:", tmp_mat
         real(8), dimension(:, :, :), pointer :: sie          
         real(8), dimension(:, :, :), pointer :: vol          
 
-        real(8), dimension(:, :, :), pointer :: temperature_vof  
-        real(8), dimension(:, :, :), pointer :: cell_mass_vof1
-        real(8), dimension(:, :, :), pointer :: pressure_vof     
-        real(8), dimension(:, :, :), pointer :: density_vof      
-        real(8), dimension(:, :, :), pointer :: dp_drho_vof      
-        real(8), dimension(:, :, :), pointer :: dp_de_vof        
-        real(8), dimension(:, :, :), pointer :: sie_vof          
-        real(8), dimension(:, :, :), pointer :: mat_vof          
+        real(8), dimension(:, :, :, :), pointer :: temperature_vof
+        real(8), dimension(:, :, :, :), pointer :: cell_mass_vof1
+        real(8), dimension(:, :, :, :), pointer :: pressure_vof
+        real(8), dimension(:, :, :, :), pointer :: density_vof
+        real(8), dimension(:, :, :, :), pointer :: dp_drho_vof
+        real(8), dimension(:, :, :, :), pointer :: dp_de_vof
+        real(8), dimension(:, :, :, :), pointer :: sie_vof
+        real(8), dimension(:, :, :, :), pointer :: mat_vof
 
         integer :: i, j, tmp_mat        
         real(8) :: x1, x2, x3, x4       
@@ -1574,16 +1570,23 @@ write(*,*) "mat:", tmp_mat
         call this%total_sie        %Point_to_data(sie)
         call this%total_vof        %Point_to_data(vof)
         call this%a_visc           %Point_to_data(a_visc)
+        call this%materials%temperature%Point_to_data(temperature_vof)
+        call this%materials%cell_mass  %Point_to_data(cell_mass_vof1)
+        call this%materials%pressure   %Point_to_data(pressure_vof)
+        call this%materials%density    %Point_to_data(density_vof)
+        call this%materials%dp_drho    %Point_to_data(dp_drho_vof)
+        call this%materials%dp_de      %Point_to_data(dp_de_vof)
+        !                        call this%materials(tmp_mat)%sie        %Point_to_data(1, sie_vof)
+        call this%materials%vof        %Point_to_data(mat_vof)
 
-        call this%num_mat_cells    %Point_to_data(n_materials_in_cell)
+        call this%num_mat_cells    %Point_to_data(nmats_in_cell)
         do j = 1, this%ny
             do i = 1, this%nx
                 if (vof(i, j, 1) < this%emf) then   
                     sie(i, j, 1) = 0d0
                     temperature (i, j, 1) = teps
-                    do tmp_mat = 1, this%n_materials        
-                        call this%materials(tmp_mat)%temperature%Point_to_data(temperature_vof)
-                        temperature_vof(i, j, 1) = 0d0
+                    do tmp_mat = 1, this%nmats
+                        temperature_vof(tmp_mat, i, j, 1) = 0d0
                     end do
 
 
@@ -1653,28 +1656,17 @@ write(*,*) "mat:", tmp_mat
                     end if
 
                     sie(i, j, 1) = 0d0     
-write(*,*)"REEM1", this%materials(1)%cell_mass%data(1)%values(1,1,1)
-call this%materials(1)%cell_mass%Point_to_data(cell_mass_vof1)
 
-                    do tmp_mat = 1, this%n_materials
-write(*,*) "i am in energy2d", tmp_mat
-                        call this%materials(tmp_mat)%temperature%Point_to_data(temperature_vof)
-                        call this%materials(tmp_mat)%cell_mass  %Point_to_data(1, cell_mass_vof1)
-                        call this%materials(tmp_mat)%pressure   %Point_to_data(pressure_vof)
-                        call this%materials(tmp_mat)%density    %Point_to_data(density_vof)
-                        call this%materials(tmp_mat)%dp_drho    %Point_to_data(dp_drho_vof)
-                        call this%materials(tmp_mat)%dp_de      %Point_to_data(dp_de_vof)
-!                        call this%materials(tmp_mat)%sie        %Point_to_data(1, sie_vof)
-                        call this%materials(tmp_mat)%vof        %Point_to_data(mat_vof)
+                    do tmp_mat = 1, this%nmats
 
 
 
-                        if (mat_vof(i, j, 1) < this%emf) then     
-!                            sie_vof(i, j, 1) = 0d0
-                            temperature_vof(i, j, 1) = 0d0
+                        if (mat_vof(tmp_mat, i, j, 1) < this%emf) then
+                            !                            sie_vof(i, j, 1) = 0d0
+                            temperature_vof(tmp_mat, i, j, 1) = 0d0
                         else
-!                            sie_vof_temp = sie_vof(i, j, 1)
-                            if (n_materials_in_cell(i, j, 1) == 1d0) then  
+                            !                            sie_vof_temp = sie_vof(i, j, 1)
+                            if (nmats_in_cell(i, j, 1) == 1d0) then
                                 pressure_temp = pressure(i, j, 1)
 
 
@@ -1682,20 +1674,20 @@ write(*,*) "i am in energy2d", tmp_mat
                                 dp_de_temp   = dp_de  (i, j, 1)
                                 dp_drho_temp = dp_drho(i, j, 1)
                             else                                         
-                                pressure_temp = pressure_vof(i, j, 1) * vof(i, j, 1)
+                                pressure_temp = pressure_vof(tmp_mat, i, j, 1) * vof(i, j, 1)
 
 
 
 
-                                dp_de_temp   = dp_de_vof  (i, j, 1)
-                                dp_drho_temp = dp_drho_vof(i, j, 1)
+                                dp_de_temp   = dp_de_vof  (tmp_mat, i, j, 1)
+                                dp_drho_temp = dp_drho_vof(tmp_mat, i, j, 1)
                             end if
-                            mass_vof_temp = cell_mass_vof1(i, j, 1)
-                            vol_vof_temp  = vol(i, j, 1) * mat_vof(i, j, 1)
+                            mass_vof_temp = cell_mass_vof1(tmp_mat, i, j, 1)
+                            vol_vof_temp  = vol(i, j, 1) * mat_vof(tmp_mat, i, j, 1)
 
 
 
-                            vol_diff_vof_temp = vol_diff * mat_vof(i, j, 1)
+                            vol_diff_vof_temp = vol_diff * mat_vof(tmp_mat, i, j, 1)
 
                             stress_fac = 0d0
                             vol_diff_vof_stress_temp = vol_diff_stress * stress_fac * vof(i, j, 1)
@@ -1708,11 +1700,11 @@ write(*,*) "i am in energy2d", tmp_mat
                                 vol_diff_vof_temp + vol_diff_vof_stress_temp) / &
                                 (1d0 + 0.5d0 * dp_de_temp * vol_diff_vof_temp / (mass_vof_temp + 1d-30)) / (mass_vof_temp+1d-30)
 
-!                            sie_vof(i, j, 1) = sie_vof(i, j, 1) + sie_diff
+                        !                            sie_vof(i, j, 1) = sie_vof(i, j, 1) + sie_diff
 
 
 
-!                            sie(i, j, 1) = sie(i, j, 1) + sie_vof(i, j, 1) * mass_vof_temp
+                        !                            sie(i, j, 1) = sie(i, j, 1) + sie_vof(i, j, 1) * mass_vof_temp
                         end if   
                     end do
 
@@ -1730,9 +1722,7 @@ write(*,*) "i am in energy2d", tmp_mat
 
 
         call this%total_sie%Exchange_virtual_space_blocking()
-        do tmp_mat = 1, this%n_materials
-            call this%materials(tmp_mat)%sie%Exchange_virtual_space_blocking()
-        end do
+        call this%materials%sie%Exchange_virtual_space_blocking()
     end subroutine Calculate_energy_2d
 
     subroutine Calculate_energy_3d(this, teps, dt)
@@ -1750,7 +1740,7 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:, :, :), pointer :: y            
         real(8), dimension(:, :, :), pointer :: z            
 
-        real(8), dimension(:, :, :), pointer :: n_materials_in_cell 
+        real(8), dimension(:, :, :), pointer :: nmats_in_cell
 
         real(8), dimension(:, :, :), pointer :: temperature  
         real(8), dimension(:, :, :), pointer :: cell_mass    
@@ -1762,14 +1752,14 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:, :, :), pointer :: sie          
         real(8), dimension(:, :, :), pointer :: vol          
 
-        real(8), dimension(:, :, :), pointer :: temperature_vof  
-        real(8), dimension(:, :, :), pointer :: cell_mass_vof    
-        real(8), dimension(:, :, :), pointer :: pressure_vof     
-        real(8), dimension(:, :, :), pointer :: density_vof      
-        real(8), dimension(:, :, :), pointer :: dp_drho_vof      
-        real(8), dimension(:, :, :), pointer :: dp_de_vof        
-        real(8), dimension(:, :, :), pointer :: sie_vof          
-        real(8), dimension(:, :, :), pointer :: mat_vof          
+        real(8), dimension(:, :, :, :), pointer :: temperature_vof
+        real(8), dimension(:, :, :, :), pointer :: cell_mass_vof
+        real(8), dimension(:, :, :, :), pointer :: pressure_vof
+        real(8), dimension(:, :, :, :), pointer :: density_vof
+        real(8), dimension(:, :, :, :), pointer :: dp_drho_vof
+        real(8), dimension(:, :, :, :), pointer :: dp_de_vof
+        real(8), dimension(:, :, :, :), pointer :: sie_vof
+        real(8), dimension(:, :, :, :), pointer :: mat_vof
 
         real(8), dimension(:, :, :), pointer :: mat_vol          
         real(8), dimension(:, :, :), pointer :: material_x       
@@ -1804,13 +1794,21 @@ write(*,*) "i am in energy2d", tmp_mat
         call this%total_vof        %Point_to_data(vof)
         call this%a_visc           %Point_to_data(a_visc)
         call this%total_density    %Point_to_data(density_vof)
-        call this%num_mat_cells    %Point_to_data(n_materials_in_cell)
+        call this%num_mat_cells    %Point_to_data(nmats_in_cell)
         call this%rezone%material_volume%Point_to_data(mat_vol)
         call this%rezone%Point_to_data (material_x, material_y, material_z)
         call this%rezone%Point_to_volume(mat_vol)
 
 
 
+        call this%materials%temperature%Point_to_data(temperature_vof)
+        call this%materials%cell_mass  %Point_to_data(cell_mass_vof)
+        call this%materials%pressure   %Point_to_data(pressure_vof)
+        call this%materials%density    %Point_to_data(density_vof)
+        call this%materials%dp_drho    %Point_to_data(dp_drho_vof)
+        call this%materials%dp_de      %Point_to_data(dp_de_vof)
+        call this%materials%sie        %Point_to_data(sie_vof)
+        call this%materials%vof        %Point_to_data(mat_vof)
 
 
 
@@ -1821,22 +1819,15 @@ write(*,*) "i am in energy2d", tmp_mat
 
 
 
-        do tmp_mat = 1, this%n_materials        
-            call this%materials(tmp_mat)%temperature%Point_to_data(temperature_vof)
-            call this%materials(tmp_mat)%cell_mass  %Point_to_data(cell_mass_vof)
-            call this%materials(tmp_mat)%pressure   %Point_to_data(pressure_vof)
-            call this%materials(tmp_mat)%density    %Point_to_data(density_vof)
-            call this%materials(tmp_mat)%dp_drho    %Point_to_data(dp_drho_vof)
-            call this%materials(tmp_mat)%dp_de      %Point_to_data(dp_de_vof)
-            call this%materials(tmp_mat)%sie        %Point_to_data(sie_vof)
-            call this%materials(tmp_mat)%vof        %Point_to_data(mat_vof)
-            do k = 1, this%nz
-                do j = 1, this%ny
-                    do i = 1, this%nx
+        do k = 1, this%nz
+            do j = 1, this%ny
+                do i = 1, this%nx
+                    do tmp_mat = 1, this%nmats
+
                         if (vof(i, j, k) < this%emf) then
                             sie(i, j, k) = 0d0
                             temperature(i, j, k) = teps
-                            temperature_vof(i, j, k) = 0d0
+                            temperature_vof(tmp_mat, i, j, k) = 0d0
                             cycle
                         end if
 
@@ -1849,26 +1840,26 @@ write(*,*) "i am in energy2d", tmp_mat
                             a_visc_temp = 0d0
                         end if
 
-                        if (mat_vof(i, j, k) < this%emf) then
-                            sie_vof(i, j, k) = 0d0
-                            temperature_vof(i, j, k) = 0d0
+                        if (mat_vof(tmp_mat, i, j, k) < this%emf) then
+                            sie_vof(tmp_mat, i, j, k) = 0d0
+                            temperature_vof(tmp_mat, i, j, k) = 0d0
                         else
-                            sie_vof_temp = sie_vof(i, j, k)
-                            if (n_materials_in_cell(i, j, k) == 1d0) then
+                            sie_vof_temp = sie_vof(tmp_mat, i, j, k)
+                            if (nmats_in_cell(i, j, k) == 1d0) then
                                 pressure_temp = pressure(i, j, k) 
                                 dp_de_temp    = dp_de   (i, j, k)
                                 dp_drho_temp  = dp_drho (i, j, k)
                             else
-                                pressure_temp = pressure_vof(i, j, k)
-                                dp_de_temp    = dp_de_vof   (i, j, k)
-                                dp_drho_temp  = dp_drho_vof (i, j, k)
+                                pressure_temp = pressure_vof(tmp_mat, i, j, k)
+                                dp_de_temp    = dp_de_vof   (tmp_mat, i, j, k)
+                                dp_drho_temp  = dp_drho_vof (tmp_mat, i, j, k)
                             end if
                             pressure_temp  = pressure_temp * vof(i, j, k)   
-                            mass_vof_temp  = cell_mass_vof(i, j, k)
+                            mass_vof_temp  = cell_mass_vof(tmp_mat, i, j, k)
 
 
-                            vol_diff_vof_temp = vol_diff * mat_vof(i, j, k)
-                            vol_vof_temp  = vol(i, j, k) * mat_vof(i, j, k)
+                            vol_diff_vof_temp = vol_diff * mat_vof(tmp_mat, i, j, k)
+                            vol_vof_temp  = vol(i, j, k) * mat_vof(tmp_mat, i, j, k)
 
                             stress_fac = 0d0
 
@@ -1880,8 +1871,8 @@ write(*,*) "i am in energy2d", tmp_mat
                                 (1d0 + 0.5d0 * dp_de_temp * vol_diff_vof_temp / (mass_vof_temp + 1d-30)) / (mass_vof_temp+1d-30)
 
                             if (sie_diff == 0d0) cycle
-                            sie_vof(i, j, k) = sie_vof(i, j, k) + sie_diff
-                            sie(i, j, k) = sie(i, j, k) + sie_vof(i, j, k) * mass_vof_temp
+                            sie_vof(tmp_mat, i, j, k) = sie_vof(tmp_mat, i, j, k) + sie_diff
+                            sie(i, j, k) = sie(i, j, k) + sie_vof(tmp_mat, i, j, k) * mass_vof_temp
                         end if
                     end do
                 end do
@@ -1894,9 +1885,7 @@ write(*,*) "i am in energy2d", tmp_mat
 
         call this%total_sie%Exchange_virtual_space_blocking()
 
-        do tmp_mat = 1, this%n_materials
-            call this%materials(tmp_mat)%sie%Exchange_virtual_space_blocking()
-        end do
+        call this%materials%sie%Exchange_virtual_space_blocking()
 
 
         return
@@ -1916,7 +1905,7 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:, :, :), pointer :: x            
         real(8), dimension(:, :, :), pointer :: y            
 
-        real(8), dimension(:, :, :), pointer :: n_materials_in_cell 
+        real(8), dimension(:, :, :), pointer :: nmats_in_cell
         real(8), dimension(:, :, :), pointer :: cell_mass           
         real(8), dimension(:, :, :), pointer :: pressure            
         real(8), dimension(:, :, :), pointer :: a_visc              
@@ -1924,9 +1913,9 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:, :, :), pointer :: vof                 
         real(8), dimension(:, :, :), pointer :: sie                 
 
-        real(8), dimension(:, :, :), pointer :: cell_mass_vof    
-        real(8), dimension(:, :, :), pointer :: mat_vof          
-        real(8), dimension(:, :, :), pointer :: sie_vof          
+        real(8), dimension(:, :, :, :), pointer :: cell_mass_vof
+        real(8), dimension(:, :, :, :), pointer :: mat_vof
+        real(8), dimension(:, :, :, :), pointer :: sie_vof
 
         real(8) :: x1, x2, x3, x4       
         real(8) :: y1, y2, y3, y4       
@@ -1948,12 +1937,14 @@ write(*,*) "i am in energy2d", tmp_mat
 
         call this%total_cell_mass  %Point_to_data(cell_mass)
         call this%total_pressure   %Point_to_data(pressure)
-        call this%num_mat_cells    %Point_to_data(n_materials_in_cell)
+        call this%num_mat_cells    %Point_to_data(nmats_in_cell)
         call this%total_volume     %Point_to_data(vol)
         call this%total_sie        %Point_to_data(sie)
         call this%total_vof        %Point_to_data(vof)
         call this%a_visc           %Point_to_data(a_visc)
-
+                    call this%materials%sie      %Point_to_data(sie_vof)
+                    call this%materials%vof      %Point_to_data(mat_vof)
+                    call this%materials%cell_mass%Point_to_data(cell_mass_vof)
         emf1 = 1 - this%emf
 
         do j = 1, this%ny
@@ -1964,7 +1955,7 @@ write(*,*) "i am in energy2d", tmp_mat
                 if (vof(i, j, 1) > emf1) then  
                     vof(i, j, 1) = 1d0
                 else if (vof(i, j, 1) < this%emf) then 
-                    n_materials_in_cell(i, j, 1) = 0
+                    nmats_in_cell(i, j, 1) = 0
                     vof(i, j, 1) = 0d0
                 else
 
@@ -1987,9 +1978,9 @@ write(*,*) "i am in energy2d", tmp_mat
                         if (vof(i, j, 1) < emf1) vof(i, j, 1) = vof(i, j, 1) * vol_ratio
                         if (vof(i, j, 1) > emf1) vof(i, j, 1) = 1d0
                         vol_ratio = vof(i, j, 1) / vof_old
-                        do tmp_mat = 1, this%n_materials
-                            call this%materials(tmp_mat)%vof%Point_to_data(mat_vof)
-                            if (mat_vof(i, j, 1) < emf1) mat_vof(i, j, 1) = mat_vof(i, j, 1) * vol_ratio
+                        do tmp_mat = 1, this%nmats
+
+                            if (mat_vof(tmp_mat, i, j, 1) < emf1) mat_vof(tmp_mat, i, j, 1) = mat_vof(tmp_mat, i, j, 1) * vol_ratio
                         end do
                     end if
                 end if
@@ -1999,30 +1990,27 @@ write(*,*) "i am in energy2d", tmp_mat
                 sie_vof_sum = 0d0
                 cell_mass_vof_sum = 0d0
 
-                do tmp_mat = 1, this%n_materials
-                    call this%materials(tmp_mat)%sie      %Point_to_data(sie_vof)
-                    call this%materials(tmp_mat)%vof      %Point_to_data(mat_vof)
-                    call this%materials(tmp_mat)%cell_mass%Point_to_data(cell_mass_vof)
+                do tmp_mat = 1, this%nmats
 
-                    if (mat_vof(i, j, 1) > emf1) then
-                        mat_vof      (i, j, 1) = 1d0
-                    else if (mat_vof(i, j, 1) < this%emf) then
-                        mat_vof      (i, j, 1) = 0d0
-                        cell_mass_vof(i, j, 1) = 0d0
-                        sie_vof      (i, j, 1) = 0d0
+                    if (mat_vof(tmp_mat, i, j, 1) > emf1) then
+                        mat_vof      (tmp_mat, i, j, 1) = 1d0
+                    else if (mat_vof(tmp_mat, i, j, 1) < this%emf) then
+                        mat_vof      (tmp_mat, i, j, 1) = 0d0
+                        cell_mass_vof(tmp_mat, i, j, 1) = 0d0
+                        sie_vof      (tmp_mat, i, j, 1) = 0d0
                     end if
-                    vof_sum            = vof_sum            + mat_vof(i, j, 1)
-                    sie_vof_sum        = sie_vof_sum        + sie_vof(i, j, 1) * cell_mass_vof(i, j, 1)
-                    cell_mass_vof_sum  = cell_mass_vof_sum  + cell_mass_vof (i, j, 1)
-                    if (vof_max <= mat_vof(i, j, 1)) then
-                        vof_max     = mat_vof(i, j, 1)
+                    vof_sum            = vof_sum            + mat_vof(tmp_mat, i, j, 1)
+                    sie_vof_sum        = sie_vof_sum        + sie_vof(tmp_mat, i, j, 1) * cell_mass_vof(tmp_mat, i, j, 1)
+                    cell_mass_vof_sum  = cell_mass_vof_sum  + cell_mass_vof (tmp_mat, i, j, 1)
+                    if (vof_max <= mat_vof(tmp_mat, i, j, 1)) then
+                        vof_max     = mat_vof(tmp_mat, i, j, 1)
                         mat_vof_max = tmp_mat
                     end if
                 end do
 
                 if (vof_sum /= vof(i, j, 1)) then
-                    call this%materials(mat_vof_max)%vof%Point_to_data(mat_vof)
-                    mat_vof(i, j, 1) = mat_vof(i, j, 1) + vof(i, j, 1) - vof_sum
+
+                    mat_vof(mat_vof_max, i, j, 1) = mat_vof(mat_vof_max, i, j, 1) + vof(i, j, 1) - vof_sum
                 end if
 
 
@@ -2045,7 +2033,7 @@ write(*,*) "i am in energy2d", tmp_mat
 
         real(8), dimension(:, :, :), pointer :: mat_vol  
 
-        real(8), dimension(:, :, :), pointer :: n_materials_in_cell 
+        real(8), dimension(:, :, :), pointer :: nmats_in_cell
         real(8), dimension(:, :, :), pointer :: cell_mass           
         real(8), dimension(:, :, :), pointer :: pressure            
         real(8), dimension(:, :, :), pointer :: a_visc              
@@ -2053,9 +2041,9 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:, :, :), pointer :: vof                 
         real(8), dimension(:, :, :), pointer :: sie                 
 
-        real(8), dimension(:, :, :), pointer :: cell_mass_vof    
-        real(8), dimension(:, :, :), pointer :: mat_vof          
-        real(8), dimension(:, :, :), pointer :: sie_vof          
+        real(8), dimension(:, :, :, :), pointer :: cell_mass_vof
+        real(8), dimension(:, :, :, :), pointer :: mat_vof
+        real(8), dimension(:, :, :, :), pointer :: sie_vof
 
         real(8), dimension(:, :, :), allocatable :: vof_sum_arr          
         real(8), dimension(:, :, :), allocatable :: vof_max_arr          
@@ -2078,7 +2066,7 @@ write(*,*) "i am in energy2d", tmp_mat
 
         call this%total_cell_mass  %Point_to_data(cell_mass)
         call this%total_pressure   %Point_to_data(pressure)
-        call this%num_mat_cells    %Point_to_data(n_materials_in_cell)
+        call this%num_mat_cells    %Point_to_data(nmats_in_cell)
         call this%total_volume     %Point_to_data(vol)
         call this%total_sie        %Point_to_data(sie)
         call this%total_vof        %Point_to_data(vof)
@@ -2099,71 +2087,71 @@ write(*,*) "i am in energy2d", tmp_mat
         cell_mass_vof_sum_arr = 0d0
         mat_vof_max_arr = 0
 
-
-        do tmp_mat = 1, this%n_materials
-            call this%materials(tmp_mat)%sie      %Point_to_data(sie_vof)
-            call this%materials(tmp_mat)%vof      %Point_to_data(mat_vof)
-            call this%materials(tmp_mat)%cell_mass%Point_to_data(cell_mass_vof)
-
-            do k = 1, this%nz
-                do j = 1, this%ny
-                    do i = 1, this%nx
-
-                        if (vof(i, j, k) > emf1) then  
-                            vof(i, j, k) = 1d0
-                        else if (vof(i, j, k) < this%emf) then 
-                            n_materials_in_cell(i, j, k) = 0
-                            vof(i, j, k) = 0d0
-                        else if (from_interp_mesh /= 1) then
-
-                            vol_new   = mat_vol(i, j, k)
-                            vol_ratio = vol(i, j, k) / vol_new
-                            vof_old   = vof(i, j, k)
-
-                            if ((1d0 - 1d0 / vol_ratio) * (pressure(i, j, k) + a_visc(i, j, k)) > 0d0) then
-                                if (vof(i, j, k) < emf1) vof(i, j, k) = vof(i, j, k) * vol_ratio
-                                if (vof(i, j, k) > emf1) vof(i, j, k) = 1d0
-                                vol_ratio = vof(i, j, k) / vof_old
-                                if (mat_vof(i, j, k) < emf1) mat_vof(i, j, k) = mat_vof(i, j, k) * vol_ratio
-                            end if
-                        end if
-
-
-                        if (mat_vof(i, j, k) > emf1) then
-                            mat_vof      (i, j, k) = 1d0
-                        else if (mat_vof(i, j, k) < this%emf) then
-                            mat_vof      (i, j, k) = 0d0
-                            cell_mass_vof(i, j, k) = 0d0
-                            sie_vof      (i, j, k) = 0d0
-                        end if
-                        vof_sum_arr(i, j, k)            = vof_sum_arr(i, j, k)            + mat_vof(i, j, k)
-                        sie_vof_sum_arr(i, j, k)        = sie_vof_sum_arr(i, j, k)        + sie_vof(i, j, k) * cell_mass_vof(i, j, k)
-                        cell_mass_vof_sum_arr(i, j, k)  = cell_mass_vof_sum_arr(i, j, k)  + cell_mass_vof (i, j, k)
-                        if (vof_max_arr(i, j, k) <= mat_vof(i, j, k)) then
-                            vof_max_arr(i, j, k) = mat_vof(i, j, k)
-                            mat_vof_max_arr(i, j, k) = tmp_mat
-                        end if
-
-                    end do
-                end do
-            end do
-        end do
-
-        do k = 1, this%nz
-            do j = 1, this%ny
-                do i = 1, this%nx
-                    if (vof_sum_arr(i,j,k) /= vof(i,j,k)) then
-                        call this%materials(mat_vof_max_arr(i,j,k))%vof%Point_to_data(mat_vof)
-                        mat_vof(i, j, k) = mat_vof(i, j, k) + vof(i, j, k) - vof_sum_arr(i,j,k)
-                    end if
-
-                    sie_tot = sie(i, j, k) * cell_mass(i, j, k)
-                    if ((abs(sie_vof_sum_arr(i,j,k) - sie_tot) > 1d-4 * abs(sie_tot)) .and. (abs(sie_tot) > 1d-40)) then
-                        sie(i, j, k) = sie_vof_sum_arr(i,j,k) / (cell_mass(i, j, k) + 1d-20)
-                    end if
-                end do
-            end do
-        end do
+            call this%materials%sie      %Point_to_data(sie_vof)
+            call this%materials%vof      %Point_to_data(mat_vof)
+            call this%materials%cell_mass%Point_to_data(cell_mass_vof)
+!        do tmp_mat = 1, this%nmats
+!
+!
+!            do k = 1, this%nz
+!                do j = 1, this%ny
+!                    do i = 1, this%nx
+!
+!                        if (vof(i, j, k) > emf1) then
+!                            vof(i, j, k) = 1d0
+!                        else if (vof(i, j, k) < this%emf) then
+!                            nmats_in_cell(i, j, k) = 0
+!                            vof(i, j, k) = 0d0
+!                        else if (from_interp_mesh /= 1) then
+!
+!                            vol_new   = mat_vol(i, j, k)
+!                            vol_ratio = vol(i, j, k) / vol_new
+!                            vof_old   = vof(i, j, k)
+!
+!                            if ((1d0 - 1d0 / vol_ratio) * (pressure(i, j, k) + a_visc(i, j, k)) > 0d0) then
+!                                if (vof(i, j, k) < emf1) vof(i, j, k) = vof(i, j, k) * vol_ratio
+!                                if (vof(i, j, k) > emf1) vof(i, j, k) = 1d0
+!                                vol_ratio = vof(i, j, k) / vof_old
+!                                if (mat_vof(i, j, k) < emf1) mat_vof(i, j, k) = mat_vof(i, j, k) * vol_ratio
+!                            end if
+!                        end if
+!
+!
+!                        if (mat_vof(i, j, k) > emf1) then
+!                            mat_vof      (i, j, k) = 1d0
+!                        else if (mat_vof(i, j, k) < this%emf) then
+!                            mat_vof      (i, j, k) = 0d0
+!                            cell_mass_vof(i, j, k) = 0d0
+!                            sie_vof      (i, j, k) = 0d0
+!                        end if
+!                        vof_sum_arr(i, j, k)            = vof_sum_arr(i, j, k)            + mat_vof(i, j, k)
+!                        sie_vof_sum_arr(i, j, k)        = sie_vof_sum_arr(i, j, k)        + sie_vof(i, j, k) * cell_mass_vof(i, j, k)
+!                        cell_mass_vof_sum_arr(i, j, k)  = cell_mass_vof_sum_arr(i, j, k)  + cell_mass_vof (i, j, k)
+!                        if (vof_max_arr(i, j, k) <= mat_vof(i, j, k)) then
+!                            vof_max_arr(i, j, k) = mat_vof(i, j, k)
+!                            mat_vof_max_arr(i, j, k) = tmp_mat
+!                        end if
+!
+!                    end do
+!                end do
+!            end do
+!        end do
+!
+!        do k = 1, this%nz
+!            do j = 1, this%ny
+!                do i = 1, this%nx
+!                    if (vof_sum_arr(i,j,k) /= vof(i,j,k)) then
+!                        call this%materials(mat_vof_max_arr(i,j,k))%vof%Point_to_data(mat_vof)
+!                        mat_vof(i, j, k) = mat_vof(i, j, k) + vof(i, j, k) - vof_sum_arr(i,j,k)
+!                    end if
+!
+!                    sie_tot = sie(i, j, k) * cell_mass(i, j, k)
+!                    if ((abs(sie_vof_sum_arr(i,j,k) - sie_tot) > 1d-4 * abs(sie_tot)) .and. (abs(sie_tot) > 1d-40)) then
+!                        sie(i, j, k) = sie_vof_sum_arr(i,j,k) / (cell_mass(i, j, k) + 1d-20)
+!                    end if
+!                end do
+!            end do
+!        end do
 
 
         deallocate(vof_sum_arr)
@@ -2172,10 +2160,7 @@ write(*,*) "i am in energy2d", tmp_mat
         deallocate(cell_mass_vof_sum_arr)
         deallocate(mat_vof_max_arr)
         call this%total_vof%Apply_boundarY(.false.)
-        do tmp_mat = 1,this%n_materials
-            call this%materials(tmp_mat)%vof%Apply_boundarY(is_blocking=.false.)
-        end do
-
+            call this%materials%vof%Apply_boundarY(is_blocking=.false.)
 
         return
     end subroutine Fix_vof_3d
@@ -2373,14 +2358,10 @@ write(*,*) "i am in energy2d", tmp_mat
 
 
         call this%total_vof%Exchange_end()
-        do i = 1,this%n_materials
-            call this%materials(i)%vof%Exchange_end()
-        end do
+            call this%materials%vof%Exchange_end()
         call this%Calculate_density(this%rezone%material_volume)
         call this%total_density%Apply_boundary()
-        do i = 1, this%n_materials
-            call this%materials(i)%density  %Exchange_virtual_space_blocking()
-        end do
+            call this%materials%density  %Exchange_virtual_space_blocking()
 
 
 
@@ -2583,7 +2564,7 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:,:,:), pointer, intent(out)    :: ptr   
         integer                           , intent(in)     :: material_num
 
-        call this%materials(material_num)%density%Point_to_data(ptr)
+!        call this%materials(material_num)%density%Point_to_data(ptr)
     end subroutine Point_to_density_vof_data
 
     subroutine Point_to_cell_mass_vof_data (this, ptr, material_num)
@@ -2591,7 +2572,7 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:,:,:), pointer, intent(out)    :: ptr   
         integer                           , intent(in)     :: material_num
 
-        call this%materials(material_num)%cell_mass%Point_to_data(ptr)
+!        call this%materials(material_num)%cell_mass%Point_to_data(ptr)
     end subroutine Point_to_cell_mass_vof_data
 
     subroutine Point_to_mat_vof_data (this, ptr, material_num)
@@ -2599,7 +2580,7 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:,:,:), pointer, intent(out)    :: ptr   
         integer                           , intent(in)     :: material_num
 
-        call this%materials(material_num)%vof%Point_to_data(ptr)
+!        call this%materials(material_num)%vof%Point_to_data(ptr)
     end subroutine Point_to_mat_vof_data
 
     subroutine Point_to_temperature_vof_data (this, ptr, material_num)
@@ -2607,7 +2588,7 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:,:,:), pointer, intent(out)    :: ptr   
         integer                                            :: material_num
 
-        call this%materials(material_num)%temperature%Point_to_data(ptr)
+!        call this%materials(material_num)%temperature%Point_to_data(ptr)
     end subroutine Point_to_temperature_vof_data
 
     subroutine Point_to_temperature_old_vof_data (this, ptr, material_num)
@@ -2615,7 +2596,7 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:,:,:), pointer, intent(out)    :: ptr   
         integer                           , intent(in)     :: material_num
 
-        call this%materials(material_num)%temperature_old%Point_to_data(ptr)
+!        call this%materials(material_num)%temperature_old%Point_to_data(ptr)
     end subroutine Point_to_temperature_old_vof_data
 
     subroutine Point_to_pressure_vof_data (this, ptr, material_num)
@@ -2623,7 +2604,7 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:,:,:), pointer, intent(out)    :: ptr   
         integer                                            :: material_num
 
-        call this%materials(material_num)%pressure%Point_to_data(ptr)
+!        call this%materials(material_num)%pressure%Point_to_data(ptr)
     end subroutine Point_to_pressure_vof_data
 
     subroutine Point_to_sie_vof_data (this, ptr, material_num)
@@ -2631,7 +2612,7 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:,:,:), pointer, intent(out)    :: ptr   
         integer                           , intent(in)     :: material_num
 
-        call this%materials(material_num)%sie%Point_to_data(ptr)
+!        call this%materials(material_num)%sie%Point_to_data(ptr)
     end subroutine Point_to_sie_vof_data
 
     subroutine Point_to_sound_velocity_vof_data (this, ptr, material_num)
@@ -2639,7 +2620,7 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:,:,:), pointer, intent(out)    :: ptr   
         integer                           , intent(in)     :: material_num
 
-        call this%materials(material_num)%sound_vel%Point_to_data(ptr)
+!        call this%materials(material_num)%sound_vel%Point_to_data(ptr)
     end subroutine Point_to_sound_velocity_vof_data
 
     subroutine Point_to_deriv_vof_data (this, dp_de_vof, dp_drho_vof, dt_de_vof, dt_drho_vof, material_num)
@@ -2648,10 +2629,10 @@ write(*,*) "i am in energy2d", tmp_mat
         real(8), dimension(:,:,:), pointer, intent(out)    :: dt_de_vof, dt_drho_vof 
         integer                           , intent(in)     :: material_num
 
-        call this%materials(material_num)%dp_de%Point_to_data(dp_de_vof)
-        call this%materials(material_num)%dp_drho%Point_to_data(dp_drho_vof)
-        call this%materials(material_num)%dt_de%Point_to_data(dt_de_vof)
-        call this%materials(material_num)%dt_drho%Point_to_data(dt_drho_vof)
+!        call this%materials(material_num)%dp_de%Point_to_data(dp_de_vof)
+!        call this%materials(material_num)%dp_drho%Point_to_data(dp_drho_vof)
+!        call this%materials(material_num)%dt_de%Point_to_data(dt_de_vof)
+!        call this%materials(material_num)%dt_drho%Point_to_data(dt_drho_vof)
     end subroutine Point_to_deriv_vof_data
 
     subroutine Point_to_mesh_velocity_data (this, ptr_x, ptr_y)
@@ -2725,28 +2706,28 @@ write(*,*) "i am in energy2d", tmp_mat
         write(tmp, '(I1)') this%parallel_params%my_rank
 
 
-        call this%num_mat_cells%debug_check_nan("Hydro: Number material Cells. Rank: " //trim(tmp))
-        call this%a_visc%debug_check_nan("Hydro: Artificial Viscosity. Rank: " //trim(tmp))
-        call this%mat_id%debug_check_nan("Hydro: Material Index. Rank: " //trim(tmp))
-        call this%total_sound_vel%debug_check_nan("Hydro: Sound Velocity. Rank: " //trim(tmp))
-        call this%acceleration%debug_check_nan("Hydro: Acceleration. Rank: " //trim(tmp))
-        call this%velocity%debug_check_nan("Hydro: Velocity. Rank: " //trim(tmp))
-        call this%total_temperature%debug_check_nan("Hydro: Temperature. Rank: " //trim(tmp))
-        call this%vertex_mass%debug_check_nan("Hydro: Vertex Mass. Rank: " //trim(tmp))
-        call this%mesh%coordinates%debug_check_nan("Hydro: Mesh coordinates. Rank: " //trim(tmp))
-        call this%total_cell_mass%debug_check_nan("Hydro: Cell Mass. Rank: " //trim(tmp))
-        call this%total_pressure%debug_check_nan("Hydro: Pressure. Rank: " //trim(tmp))
-        call this%total_density%debug_check_nan("Hydro: Density. Rank: " //trim(tmp))
-        call this%total_volume%debug_check_nan("Hydro: Volume. Rank: " //trim(tmp))
-        call this%total_sie%debug_check_nan("Hydro: SIE. Rank: " //trim(tmp))
-        call this%inversed_vertex_mass%debug_check_nan("Hydro: Inversed vertex mass. Rank: " //trim(tmp))
-        call this%total_vof%debug_check_nan("Hydro: Vof. Rank: " //trim(tmp))
-
-        do i = 1, this%n_materials
-            call this%materials(i)%cell_mass%debug_check_nan('Hydro: material cell mass. Rank: ' //trim(tmp))
-            call this%materials(i)%sie%debug_check_nan('Hydro: material sie. Rank: ' //trim(tmp))
-            call this%materials(i)%vof%debug_check_nan('Hydro: material vof. Rank: ' //trim(tmp))
-        end do
+!        call this%num_mat_cells%debug_check_nan("Hydro: Number material Cells. Rank: " //trim(tmp))
+!        call this%a_visc%debug_check_nan("Hydro: Artificial Viscosity. Rank: " //trim(tmp))
+!        call this%mat_id%debug_check_nan("Hydro: Material Index. Rank: " //trim(tmp))
+!        call this%total_sound_vel%debug_check_nan("Hydro: Sound Velocity. Rank: " //trim(tmp))
+!        call this%acceleration%debug_check_nan("Hydro: Acceleration. Rank: " //trim(tmp))
+!        call this%velocity%debug_check_nan("Hydro: Velocity. Rank: " //trim(tmp))
+!        call this%total_temperature%debug_check_nan("Hydro: Temperature. Rank: " //trim(tmp))
+!        call this%vertex_mass%debug_check_nan("Hydro: Vertex Mass. Rank: " //trim(tmp))
+!        call this%mesh%coordinates%debug_check_nan("Hydro: Mesh coordinates. Rank: " //trim(tmp))
+!        call this%total_cell_mass%debug_check_nan("Hydro: Cell Mass. Rank: " //trim(tmp))
+!        call this%total_pressure%debug_check_nan("Hydro: Pressure. Rank: " //trim(tmp))
+!        call this%total_density%debug_check_nan("Hydro: Density. Rank: " //trim(tmp))
+!        call this%total_volume%debug_check_nan("Hydro: Volume. Rank: " //trim(tmp))
+!        call this%total_sie%debug_check_nan("Hydro: SIE. Rank: " //trim(tmp))
+!        call this%inversed_vertex_mass%debug_check_nan("Hydro: Inversed vertex mass. Rank: " //trim(tmp))
+!        call this%total_vof%debug_check_nan("Hydro: Vof. Rank: " //trim(tmp))
+!
+!        do i = 1, this%nmats
+!            call this%materials(i)%cell_mass%debug_check_nan('Hydro: material cell mass. Rank: ' //trim(tmp))
+!            call this%materials(i)%sie%debug_check_nan('Hydro: material sie. Rank: ' //trim(tmp))
+!            call this%materials(i)%vof%debug_check_nan('Hydro: material vof. Rank: ' //trim(tmp))
+!        end do
 
     end subroutine debug_check_nan
    
@@ -2761,20 +2742,20 @@ write(*,*) "i am in energy2d", tmp_mat
 #ifdef DEBUG
         write(*,*) "@@@ in Write_hydro_step @@@"
 #endif
-        call this%num_mat_cells%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%mat_id%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%mesh%Write_mesh_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_cell_mass%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%velocity%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_density%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_volume%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_sie%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_vof%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_pressure_sum%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-
-        do i=1, size(this%materials)
-            call  this%materials(i)%Write_material_abstract(unit, iostat=iostat, iomsg=iomsg)
-        end do
+!        call this%num_mat_cells%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%mat_id%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%mesh%Write_mesh_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_cell_mass%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%velocity%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_density%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_volume%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_sie%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_vof%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_pressure_sum%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!
+!        do i=1, size(this%materials)
+!            call  this%materials(i)%Write_material_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        end do
 
 #ifdef DEBUG
         write(*,*) "@@@ end Write_hydro_step @@@"
@@ -2792,20 +2773,20 @@ write(*,*) "i am in energy2d", tmp_mat
 #ifdef DEBUG
         write(*,*) "@@@ in Read_hydro_step @@@"
 #endif
-        call this%num_mat_cells%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%mat_id%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%mesh%Read_mesh_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_cell_mass%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%velocity%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_density%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_volume%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_sie%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_vof%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-        call this%total_pressure_sum%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-
-        do i=1, size(this%materials)
-            call  this%materials(i)%Read_material_abstract(unit, iostat=iostat, iomsg=iomsg)
-        end do
+!        call this%num_mat_cells%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%mat_id%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%mesh%Read_mesh_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_cell_mass%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%velocity%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_density%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_volume%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_sie%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_vof%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        call this%total_pressure_sum%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+!
+!        do i=1, size(this%materials)
+!!            call  this%materials(i)%Read_material_abstract(unit, iostat=iostat, iomsg=iomsg)
+!        end do
 
 
 
