@@ -1,0 +1,7 @@
+EnableContentAssist=true
+EnableDeclView=true
+EnableHoverTip=true
+EnableVPG=true
+FortranIncludePaths=/Backus_test/src/Quantities/Cell\n/Backus_test\n
+FortranModulePaths=/Backus_test/src/Quantities/Cell\n/Backus_test\n
+eclipse.preferences.version=1
