@@ -507,12 +507,12 @@ contains
         call this%vertex_mass   %Point_to_data(vertex_mass)
 
         call this%materials%temperature%Point_to_data(temperature_vof)
+        call this%materials%temperature_old%Point_to_data(temperature_vof_old)
         call this%materials%pressure   %Point_to_data(pressure_vof)
         call this%materials%dp_drho    %Point_to_data(dp_drho_vof)
         call this%materials%dp_de      %Point_to_data(dp_de_vof)
         call this%materials%cell_mass      %Point_to_data(cell_mass_vof)
         call this%materials%sound_vel      %Point_to_data(sound_vel_vof)
-        call this%materials%pressure       %Point_to_data(pressure_vof)
         call this%materials%dt_de          %Point_to_data(dt_de_vof)
         call this%materials%vof            %Point_to_data(mat_vof)
 
@@ -565,7 +565,6 @@ contains
             do j = 1, this%ny
                 do i = 1, this%nx
                     do tmp_mat = 1, this%nmats
-
                         if (mat_vof(tmp_mat, i, j, k) <= this%emf) cycle
                         temperature(i, j, k) = temperature(i, j, k) + &
                             temperature_vof_old(tmp_mat, i, j, k) * cell_mass_vof(tmp_mat, i, j, k) / (dt_de_vof(tmp_mat, i, j, k) + 1d-30)
@@ -663,7 +662,7 @@ contains
         call this%total_density  %Point_to_data(density)
         call this%total_cell_mass%Point_to_data(cell_mass)
         call this%total_vof      %Point_to_data(vof)
-        call this%materials%density%Point_to_data(cell_mass_vof)
+        call this%materials%cell_mass%Point_to_data(cell_mass_vof)
         call this%materials%density  %Point_to_data(density_vof)
         call this%materials%vof      %Point_to_data(mat_vof)
         call volume%Point_to_data(vol)
@@ -680,16 +679,16 @@ contains
             do j = 1, this%ny
                 do i = 1, this%nx
                     do tmp_mat = 1, this%nmats
-
                         density_vof(tmp_mat, i, j, k) = 0d0
-                        if (vof(i, j, k) < this%emf) cycle
                         if (mat_vof(tmp_mat, i, j, k) > this%emf) then
                             density_vof(tmp_mat, i, j, k) = cell_mass_vof(tmp_mat, i, j, k) / (vol(i, j, k) * mat_vof(tmp_mat, i, j, k))
+!write(*,*) "Calculating", tmp_mat,i,j,density_vof(tmp_mat,i,j,k),cell_mass_vof(tmp_mat,i,j,k), mat_vof(tmp_mat,i,j,k)
                         end if
                     end do
                 end do
             end do
         end do
+!        stop
     end subroutine Calculate_density
 
     subroutine Calculate_inversed_vertex_mass(this)
@@ -953,21 +952,6 @@ contains
 
         linear_visc_fac = this%a_visc%Get_linear_visc_factor()
         quad_visc_fac = this%a_visc%Get_quad_visc_factor()
-        call this%velocity       %Point_to_data(velocity_x, velocity_y)
-        call this%mesh           %Point_to_data(x, y)
-        call this%mesh           %Point_to_r_factor(r_factor)
-
-        call this%inversed_vertex_mass%Point_to_data(inversed_vertex_mass)
-        call this%total_pressure %Point_to_data(pressure)
-        call this%total_density  %Point_to_data(density)
-        call this%total_sound_vel%Point_to_data(sound_vel)
-        call this%total_vof      %Point_to_data(vof)
-
-
-
-
-
-
 
         time%dt_cour = 1d20
 
@@ -1576,7 +1560,7 @@ contains
         call this%materials%density    %Point_to_data(density_vof)
         call this%materials%dp_drho    %Point_to_data(dp_drho_vof)
         call this%materials%dp_de      %Point_to_data(dp_de_vof)
-        !                        call this%materials(tmp_mat)%sie        %Point_to_data(1, sie_vof)
+        call this%materials%sie        %Point_to_data(sie_vof)
         call this%materials%vof        %Point_to_data(mat_vof)
 
         call this%num_mat_cells    %Point_to_data(nmats_in_cell)
@@ -1700,11 +1684,11 @@ contains
                                 vol_diff_vof_temp + vol_diff_vof_stress_temp) / &
                                 (1d0 + 0.5d0 * dp_de_temp * vol_diff_vof_temp / (mass_vof_temp + 1d-30)) / (mass_vof_temp+1d-30)
 
-                        !                            sie_vof(i, j, 1) = sie_vof(i, j, 1) + sie_diff
+                                                    sie_vof(tmp_mat,i, j, 1) = sie_vof(tmp_mat,i, j, 1) + sie_diff
 
 
 
-                        !                            sie(i, j, 1) = sie(i, j, 1) + sie_vof(i, j, 1) * mass_vof_temp
+                                                    sie(i, j, 1) = sie(i, j, 1) + sie_vof(tmp_mat,i, j, 1) * mass_vof_temp
                         end if   
                     end do
 

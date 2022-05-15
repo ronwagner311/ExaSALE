@@ -53,6 +53,7 @@ contains
       integer :: i, j, k
       gamma1 = gamma_gas - 1d0
       atomic_weight = atomic_mass / AVOGADRO
+      write(*,*) "eos!", sie(mat_num, 1:nx, 1:ny, 1), mat_num
       do k = 1, nz
          do j = 1, ny
             do i = 1, nx

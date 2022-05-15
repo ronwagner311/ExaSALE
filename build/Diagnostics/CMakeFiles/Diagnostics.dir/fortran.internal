@@ -1,5 +1,3 @@
 # The fortran modules provided by this target.
 provides
- diagnostic_module.mod
- diagnostic_module@plot_diagnostic_module.smod
- diagnostic_module@textual_diagnostic_module.smod
+ textual_diagnostic_module.mod

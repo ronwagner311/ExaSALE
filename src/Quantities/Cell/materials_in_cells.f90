@@ -69,7 +69,6 @@ contains
             end do
             j_curr = j_curr + number_cells_j(lay_j)
         end do
-
         call Constructor_2d%Init_cell_quantity_init_arr (init_values, d1, d2, 1, bc, bc_params)
 
     end function

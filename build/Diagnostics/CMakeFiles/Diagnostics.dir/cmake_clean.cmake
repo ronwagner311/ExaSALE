@@ -1,8 +1,6 @@
 file(REMOVE_RECURSE
   "../lib/libDiagnostics.pdb"
   "../lib/libDiagnostics.so"
-  "CMakeFiles/Diagnostics.dir/diagnostic.f90.o"
-  "CMakeFiles/Diagnostics.dir/plot_diagnostic.f90.o"
   "CMakeFiles/Diagnostics.dir/textual_diagnostic.f90.o"
 )
 

@@ -36,7 +36,8 @@ module problem_module
     use mesh_3d_module                  , only : mesh_3d_t
     use mesh_module                     , only : mesh_t
     use time_module                     , only : time_t
-    use diagnostic_module               , only : diagnostic_t, textual_diagnostic_t, plot_diagnostic_t!, silo_diagnostic_t, plot_diagnostic_t, &
+    use textual_diagnostic_module       , only : textual_diagnostic_t
+!    use diagnostic_module               , only : diagnostic_t, textual_diagnostic_t, plot_diagnostic_t!, silo_diagnostic_t, plot_diagnostic_t, &
     !        textual_diagnostic_hdf5_t, Static_hdf5_init, Static_hdf5_close
     use communication_parameters_module , only : communication_parameters_t
     use communication_module            , only : communication_t
@@ -104,7 +105,7 @@ module problem_module
         type (textual_diagnostic_t), dimension(:), allocatable  :: textual_diagnostics
         !        type (textual_diagnostic_hdf5_t), dimension(:), allocatable  :: textual_diagnostics_hdf5
         !        type (silo_diagnostic_t), pointer                       :: silo_diagnostic
-        type (plot_diagnostic_t), pointer                       :: plot_diagnostic
+!        type (plot_diagnostic_t), pointer                       :: plot_diagnostic
 
         type(boundary_parameters_t), pointer :: boundary_params
 
@@ -224,7 +225,7 @@ contains
         allocate(Constructor%num_mat_cells)
         allocate(Constructor%hydro)
         !        allocate(Constructor%cr)
-        allocate(Constructor%textual_diagnostics(0:df%num_diag_text))
+        allocate(textual_diagnostic_t :: Constructor%textual_diagnostics(0:df%num_diag_text))
          !       allocate(Constructor%textual_diagnostics_hdf5(0:df%num_diag_hdf5))
         write(*,*) "num of mats:", df%reduct_num_mat
         allocate(material_t    :: Constructor%materials)
@@ -413,19 +414,20 @@ contains
         do i=1, size(df%diag_types(:))
             word = df%diag_types(i)
             if (Str_eqv(word, 'plot') .eqv. .TRUE.) then
-                allocate(Constructor%plot_diagnostic)
-                Constructor%plot_diagnostic = plot_diagnostic_t()
-                call Constructor%plot_diagnostic%Init_diagnostic(Constructor%hydro, Constructor%time, 110 + i)
+!                allocate(Constructor%plot_diagnostic)
+!                Constructor%plot_diagnostic = plot_diagnostic_t()
+!                call Constructor%plot_diagnostic%Init_diagnostic(Constructor%hydro, Constructor%time, 110 + i)
             !else if (Str_eqv(word, 'silo') .eqv. .TRUE.) then
             !    allocate(Constructor%silo_diagnostic)
             !    Constructor%silo_diagnostic = silo_diagnostic_t()
             !    call Constructor%silo_diagnostic%Init_diagnostic(Constructor%hydro,Constructor%time,110 + i)
             else if (Str_eqv(word, 'text') .eqv. .TRUE.) then
                 word = df%diag_names(i)
-                Constructor%textual_diagnostics(text_diag_counter) = textual_diagnostic_t(word, 110 + i)
+                Constructor%textual_diagnostics(text_diag_counter) = textual_diagnostic_t(word, 110 + i, Constructor%parallel_params%my_rank)
                 call Constructor%textual_diagnostics(text_diag_counter)%Init_diagnostic(Constructor%hydro,Constructor%time,counter&
                     , Constructor%parallel_params%my_rank)
                 text_diag_counter = text_diag_counter + 1
+!                write(*,*), "problem:", word
             !else if (Str_eqv(word, 'hdf5') .eqv. .TRUE.) then
             !    word = df%diag_names(i)
             !    Constructor%textual_diagnostics_hdf5(hdf5_diag_counter) = textual_diagnostic_hdf5_t(word, 110 + i)
@@ -499,6 +501,7 @@ contains
         call Constructor%total_inverse_vertex_mass%Exchange_virtual_space_blocking()
 
 call Constructor%materials%density%point_to_data(density_vof)
+call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
 
         do k = 1, Constructor%nz
             do j = 1, Constructor%ny
@@ -506,11 +509,10 @@ call Constructor%materials%density%point_to_data(density_vof)
                     do tmp_mat=1, Constructor%n_materials
                         cell_mass_vof(tmp_mat, i,j,k) = vol(i,j,k) * density_vof(tmp_mat,i,j,k)
                     end do
-
                 end do
             end do
-
         end do
+
         call Constructor%materials%sie%Exchange_virtual_space_blocking()
         call Constructor%materials%density%Exchange_virtual_space_blocking()
         call Constructor%materials%cell_mass%Exchange_virtual_space_blocking()
@@ -585,17 +587,18 @@ call Constructor%materials%density%point_to_data(density_vof)
         integer, save :: counter_diag = 0
 
         do i=1,size(this%textual_diagnostics(1:))
-            call this%textual_diagnostics(i)%Apply
+            call this%textual_diagnostics(i)%Apply()
+!            write(*,*) "WRITING"
         end do
 
         !       do i=1,size(this%textual_diagnostics_hdf5(1:))
         !           call this%textual_diagnostics_hdf5(i)%Apply
         !       end do
-        if (associated(this%plot_diagnostic)) call this%plot_diagnostic%Apply
-        if (mod(this%hydro%cyc_delete, 100) == 0 .or. counter_diag == 0) then
+        !if (associated(this%plot_diagnostic)) call this%plot_diagnostic%Apply
+        !if (mod(this%hydro%cyc_delete, 100) == 0 .or. counter_diag == 0) then
 
 
-        end if
+        !end if
         counter_diag = counter_diag + 1
     end subroutine Write_to_files
 
@@ -612,7 +615,7 @@ call Constructor%materials%density%point_to_data(density_vof)
         !            call this%textual_diagnostics_hdf5(i)%Close_diagnostic
         !        end do
 
-        if ( associated(this%plot_diagnostic) ) call this%plot_diagnostic%Close_diagnostic
+!        if ( associated(this%plot_diagnostic) ) call this%plot_diagnostic%Close_diagnostic
         !if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Close_diagnostic
 
         !if ( size(this%textual_diagnostics_hdf5(1:)) > 0 ) error_hdf5 = Static_hdf5_close(this%main_hdf5_diagnostics_file_id)
@@ -658,12 +661,14 @@ call Constructor%materials%density%point_to_data(density_vof)
         !call this%cr%Restart(ckpt_name)
 
         reem_total = omp_get_wtime()
+                        call this%Write_to_files()
 
         if (this%mesh%dimension == 2) then
             do while (this%time%Should_continue())
                 call this%hydro%do_time_step_2d(this%time)
                 call this%time%Update_time()
                 call this%Write_to_files()
+!                write(*,*)" DONE CYCLE!"
             !       call this%cr%Checkpoint(ckpt_name)
             end do
 
@@ -771,13 +776,12 @@ call Constructor%materials%density%point_to_data(density_vof)
         call this%materials%Apply_eos(this%nx, this%ny, this%nz,emf,.false.)
 
 
+
         do k = 1, this%nz
             do j = 1, this%ny
                 do i = 1, this%nx
                     do tmp_mat = 1, this%n_materials
-
                         sie(i, j, k) = sie(i, j, k) + sie_vof(tmp_mat, i, j, k) * cell_mass_vof(tmp_mat, i, j, k)
-
                     end do
                 end do
             end do
@@ -787,6 +791,7 @@ call Constructor%materials%density%point_to_data(density_vof)
             do j = 1, this%ny
                 do i = 1, this%nx
                     sie(i, j, k) = sie(i, j, k) / (cell_mass(i, j, k) + 1.d-30)
+
                 end do
             end do
         end do

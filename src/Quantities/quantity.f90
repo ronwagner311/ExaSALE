@@ -224,7 +224,6 @@ contains
     subroutine Ptr_coordinates_1d_first (this, ptr)
         class (quantity_t)                , intent(in) :: this  
         real(8), dimension(:,:,:), pointer, intent(out)    :: ptr   
-
         call this%data(1)%Point_to_data (ptr)
     end subroutine Ptr_coordinates_1d_first
 
@@ -292,10 +291,13 @@ contains
         else
             tmp_ghost_width = ghost_width
         end if
-
-        do i=1, this%number_of_axises
-            call this%data(i)%Exchange_virtual_space_blocking (tmp_ghost_width)
-        end do
+        if (associated(this%data)) then
+            do i=1, this%number_of_axises
+                call this%data(i)%Exchange_virtual_space_blocking (tmp_ghost_width)
+            end do
+        else
+            call this%data_4d%Exchange_virtual_space_blocking (tmp_ghost_width)
+        end if
 
 
     end subroutine Exchange_virtual_space_blocking
@@ -312,18 +314,32 @@ contains
             tmp_ghost_width = ghost_width
         end if
 
-        do i=1, this%number_of_axises
-            call this%data(i)%Exchange_virtual_space_nonblocking (tmp_ghost_width)
-        end do
+
+        if (associated(this%data)) then
+            do i=1, this%number_of_axises
+                call this%data(i)%Exchange_virtual_space_nonblocking (tmp_ghost_width)
+            end do
+        else
+            call this%data_4d%Exchange_virtual_space_nonblocking (tmp_ghost_width)
+        end if
     end subroutine Exchange_virtual_space_nonblocking
 
     subroutine Exchange_end (this)
         class (quantity_t), intent(in out) :: this  
         integer :: i
 
-        do i=1, this%number_of_axises
-            call this%data(i)%Exchange_end ()
-        end do
+!        do i=1, this%number_of_axises
+!            call this%data(i)%Exchange_end ()
+!        end do
+
+        if (associated(this%data)) then
+            do i=1, this%number_of_axises
+                call this%data(i)%Exchange_end ()
+            end do
+        else
+            call this%data_4d%Exchange_end ()
+        end if
+
     end subroutine Exchange_end
 
 

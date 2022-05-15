@@ -125,60 +125,6 @@ Diagnostics/fast:
 	cd /home/reemh/eclipse-workspace/Backus_test/build && $(MAKE) -f Diagnostics/CMakeFiles/Diagnostics.dir/build.make Diagnostics/CMakeFiles/Diagnostics.dir/build
 .PHONY : Diagnostics/fast
 
-diagnostic.o: diagnostic.f90.o
-
-.PHONY : diagnostic.o
-
-# target to build an object file
-diagnostic.f90.o:
-	cd /home/reemh/eclipse-workspace/Backus_test/build && $(MAKE) -f Diagnostics/CMakeFiles/Diagnostics.dir/build.make Diagnostics/CMakeFiles/Diagnostics.dir/diagnostic.f90.o
-.PHONY : diagnostic.f90.o
-
-diagnostic.i: diagnostic.f90.i
-
-.PHONY : diagnostic.i
-
-# target to preprocess a source file
-diagnostic.f90.i:
-	cd /home/reemh/eclipse-workspace/Backus_test/build && $(MAKE) -f Diagnostics/CMakeFiles/Diagnostics.dir/build.make Diagnostics/CMakeFiles/Diagnostics.dir/diagnostic.f90.i
-.PHONY : diagnostic.f90.i
-
-diagnostic.s: diagnostic.f90.s
-
-.PHONY : diagnostic.s
-
-# target to generate assembly for a file
-diagnostic.f90.s:
-	cd /home/reemh/eclipse-workspace/Backus_test/build && $(MAKE) -f Diagnostics/CMakeFiles/Diagnostics.dir/build.make Diagnostics/CMakeFiles/Diagnostics.dir/diagnostic.f90.s
-.PHONY : diagnostic.f90.s
-
-plot_diagnostic.o: plot_diagnostic.f90.o
-
-.PHONY : plot_diagnostic.o
-
-# target to build an object file
-plot_diagnostic.f90.o:
-	cd /home/reemh/eclipse-workspace/Backus_test/build && $(MAKE) -f Diagnostics/CMakeFiles/Diagnostics.dir/build.make Diagnostics/CMakeFiles/Diagnostics.dir/plot_diagnostic.f90.o
-.PHONY : plot_diagnostic.f90.o
-
-plot_diagnostic.i: plot_diagnostic.f90.i
-
-.PHONY : plot_diagnostic.i
-
-# target to preprocess a source file
-plot_diagnostic.f90.i:
-	cd /home/reemh/eclipse-workspace/Backus_test/build && $(MAKE) -f Diagnostics/CMakeFiles/Diagnostics.dir/build.make Diagnostics/CMakeFiles/Diagnostics.dir/plot_diagnostic.f90.i
-.PHONY : plot_diagnostic.f90.i
-
-plot_diagnostic.s: plot_diagnostic.f90.s
-
-.PHONY : plot_diagnostic.s
-
-# target to generate assembly for a file
-plot_diagnostic.f90.s:
-	cd /home/reemh/eclipse-workspace/Backus_test/build && $(MAKE) -f Diagnostics/CMakeFiles/Diagnostics.dir/build.make Diagnostics/CMakeFiles/Diagnostics.dir/plot_diagnostic.f90.s
-.PHONY : plot_diagnostic.f90.s
-
 textual_diagnostic.o: textual_diagnostic.f90.o
 
 .PHONY : textual_diagnostic.o
@@ -215,12 +161,6 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... Diagnostics"
-	@echo "... diagnostic.o"
-	@echo "... diagnostic.i"
-	@echo "... diagnostic.s"
-	@echo "... plot_diagnostic.o"
-	@echo "... plot_diagnostic.i"
-	@echo "... plot_diagnostic.s"
 	@echo "... textual_diagnostic.o"
 	@echo "... textual_diagnostic.i"
 	@echo "... textual_diagnostic.s"

@@ -178,7 +178,6 @@ contains
                 end do
             end do
         end do
-        write(*,*) " you built this beauty!"
     end function
 
     subroutine Apply_eos(this, nx, ny, nz, emf, is_old_temperature)
