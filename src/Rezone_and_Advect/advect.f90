@@ -2164,6 +2164,7 @@ contains
         cell_mass_mat_vof_adv_fix_temp = cell_mass_vof_adv_fix(mat_fix, ia, ja, 1)
         cell_mass_mat_vof_adv_max_temp = cell_mass_vof_adv_max(mat_max, ia, ja, 1)
 
+
         cell_mass_vof_adv_fix(mat_fix, ia, ja, 1) = cell_mass_vof_adv_fix(mat_fix, ia, ja, 1) + area_out_fix_diff * density_vof_fix(mat_fix, i, j ,1)
         cell_mass_vof_adv_max(mat_max, ia, ja, 1) = cell_mass_vof_adv_max(mat_max, ia, ja, 1) + area_out_max_diff * density_vof_max(mat_max, i, j ,1)
 
