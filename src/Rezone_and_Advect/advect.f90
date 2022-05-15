@@ -303,7 +303,9 @@ contains
         call this%adv_cell_mass%Point_to_data(cell_mass_adv)
         call this%vof_advect      %Point_to_data(vof_adv)
         call this%adv_sie         %Point_to_data(sie_adv)
-        call this%adv_mats(tmp_mat)%vof%Point_to_data(mat_vof_adv)
+        call this%adv_mats%vof%Point_to_data(mat_vof_adv)
+        call this%adv_mats%area_top_in%Point_to_data(area_top_in)
+        call this%adv_mats%area_top_out%Point_to_data(area_top_out)
         nx = this%nx
         ny = this%ny
 
@@ -312,8 +314,8 @@ contains
         cell_mass_adv = 0d0
         vof_adv = 0d0
 
-        this%adv_mats%area_top_in = 0d0
-        this%adv_mats%area_top_out = 0d0
+        area_top_in = 0d0
+        area_top_out = 0d0
 
         this%adv_mats%area_right_out = 0d0
         this%adv_mats%area_right_in = 0d0
@@ -321,7 +323,7 @@ contains
         this%adv_mats%area_left_in = 0d0
         this%adv_mats%area_bottom_out = 0d0
         this%adv_mats%area_bottom_in = 0d0
-        this%adv_mats%mat_vof_adv = 0d0
+        mat_vof_adv = 0d0
 
         !        do tmp_mat = 1, this%n_materials
         !            call this%adv_mats(tmp_mat)%Point_to_areas(area_top_in, area_top_out)
@@ -689,6 +691,7 @@ contains
             f4 = 0.25d0 * (mat_vof(ind_mat,i , j , 1) * vol(i , j , 1) + mat_vof(ind_mat,i , jm, 1) * vol(i , jm, 1) + &
                 mat_vof(ind_mat,im, jm, 1) * vol(im, jm, 1) + mat_vof(ind_mat,im, j , 1) * vol(im, j , 1)) / &
                 (vol(i , j , 1) + vol(i , jm, 1) + vol(im, jm, 1) + vol(im, j , 1))
+        vof_temp = mat_vof(ind_mat, i, j, 1)
 
         else
             call this%total_vof%Point_to_data(vof)
@@ -707,6 +710,7 @@ contains
             f4 = 0.25d0 * (vof(i , j , 1) * vol(i , j , 1) + vof(i , jm, 1) * vol(i , jm, 1) + &
                 vof(im, jm, 1) * vol(im, jm, 1) + vof(im, j , 1) * vol(im, j , 1)) / &
                 (vol(i , j , 1) + vol(i , jm, 1) + vol(im, jm, 1) + vol(im, j , 1))
+        vof_temp = vof(i, j, 1)
 
         end if
 
@@ -737,7 +741,6 @@ contains
         end if
 
 
-        vof_temp = mat_vof(i, j, 1)
 
         c_temp(1) = - a * x(i    , j    , 1) - b * y(i    , j    , 1)
         c_temp(2) = - a * x(i + 1, j    , 1) - b * y(i + 1, j    , 1)
@@ -1508,7 +1511,7 @@ contains
         real(8), dimension(:, :, :, :), pointer :: sie_vof
         real(8), dimension(:, :, :, :), pointer :: sie_vof_adv
         real(8), dimension(:, :, :, :), pointer :: init_mat_layers
-        real(8), dimension(:, :, :), pointer :: init_mat_layers_adv
+        real(8), dimension(:, :, :, :), pointer :: init_mat_layers_adv
 
         integer :: tmp_mat
         integer :: index_factor
@@ -1546,20 +1549,16 @@ contains
             mat_id             (i, j, 1) = 0
 
 
-
-
-
-
             sie(i, j, 1) = 0d0
             do tmp_mat = 1, this%n_materials
 
-                cell_mass_vof(i, j, 1) = 0d0
-                sie_vof(i, j, 1) = 0d0
-                mat_vof(i, j, 1) = 0d0
+                cell_mass_vof(tmp_mat, i, j, 1) = 0d0
+                sie_vof(tmp_mat, i, j, 1) = 0d0
+                mat_vof(tmp_mat, i, j, 1) = 0d0
 
 
 
-                if (this%advect_init_layer_mat > 0) init_mat_layers(i, j, 1) = 0d0
+                if (this%advect_init_layer_mat > 0) init_mat_layers(tmp_mat, i, j, 1) = 0d0
 
 
             end do
@@ -1586,35 +1585,20 @@ contains
                     mat_vof(tmp_mat,i, j, 1) = mat_vof_adv(tmp_mat,i, j, 1)
                     cell_mass_vof(tmp_mat,i, j, 1) = mat_cell_mass_adv(tmp_mat,i, j, 1)
                     sie_vof(tmp_mat,i, j, 1) = sie_vof_adv(tmp_mat,i, j, 1)
-
-
-
                     if (this%advect_init_layer_mat > 0) init_mat_layers(tmp_mat,i, j, 1) = init_mat_layers_adv(tmp_mat,i, j, 1)
-
-
-
-
-
                     sie(i, j, 1)                 = sie(i, j, 1)       + sie_vof(tmp_mat,i, j, 1) * cell_mass_vof(tmp_mat,i, j, 1)
                     cell_mass(i, j, 1)           = cell_mass(tmp_mat,i, j, 1) + cell_mass_vof(tmp_mat,i, j, 1)
                     vof(i, j, 1)                 = vof(i, j, 1)       + mat_vof(tmp_mat,i, j, 1)
                     n_materials_in_cell(i, j, 1) = n_materials_in_cell(i, j, 1) + 1
                     mat_id(i, j, 1)              = mat_id(i, j, 1)    + tmp_mat * index_factor
                     index_factor                 = index_factor * max(this%n_materials, 10)
-
-
-
                 else
                     vof_correction         = vof_correction + mat_vof_adv(tmp_mat,i, j, 1)
-                    mat_vof(i, j, 1)       = 0.d0
-                    cell_mass_vof(i, j, 1) = 0.d0
-                    sie_vof(i, j, 1)       = 0.d0
+                    mat_vof(tmp_mat, i, j, 1)       = 0.d0
+                    cell_mass_vof(tmp_mat, i, j, 1) = 0.d0
+                    sie_vof(tmp_mat, i, j, 1)       = 0.d0
 
                     if (this%advect_init_layer_mat > 0) init_mat_layers(tmp_mat,i, j, 1) = 0d0
-
-
-
-
 
                 end if
 
@@ -1763,7 +1747,7 @@ contains
 
             if (this%advect_init_layer_mat > 0) then
                 init_mat_layers_tmp(tmp_mat) = area_r_in          * density_vof(tmp_mat,i+1, j  , 1) * init_mat_layers(tmp_mat,i+1, j  , 1) + &
-                    area_t_in(itmp_mat,, 1 ,1) * density_vof(tmp_mat,i  , j+1, 1) * init_mat_layers(tmp_mat,i  , j+1, 1) + &
+                    area_t_in(tmp_mat,i, 1 ,1) * density_vof(tmp_mat,i  , j+1, 1) * init_mat_layers(tmp_mat,i  , j+1, 1) + &
                     area_l_in          * density_vof(tmp_mat,i-1, j  , 1) * init_mat_layers(tmp_mat,i-1, j  , 1) + &
                     area_b_in          * density_vof(tmp_mat,i  , j-1, 1) * init_mat_layers(tmp_mat,i  , j-1, 1) + &
                     area_out           * density_vof(tmp_mat,i  , j  , 1) * init_mat_layers(tmp_mat,i  , j  , 1)
