@@ -77,7 +77,7 @@ contains
       integer                  , intent(in) :: d2           
       integer                  , intent(in) :: d3
       integer                  , intent(in) :: d4
-      integer, dimension(3) :: vals_shape
+      integer, dimension(4) :: vals_shape
 
       allocate (Constructor_init_arr%values (1:d4, 0:d1, 0:d2, 0:d3))
       Constructor_init_arr%values =  initial_data
@@ -130,7 +130,7 @@ Constructor_init_val%nmats = d4
       class (data_4d_t), intent(in out) :: this
       type(communication_t), pointer            :: comm
       type(communication_parameters_t), pointer :: comm_params
-      integer, dimension(3) :: vals_shape
+      integer, dimension(4) :: vals_shape
       integer :: d1,d2,d3
 
       this%communication => comm
@@ -138,12 +138,12 @@ Constructor_init_val%nmats = d4
 
       this%parallel_params => this%communication%parallel_params
       if (this%communication%is_parallel == .true.) then
-!         vals_shape = shape(this%values)
-!         d1 = vals_shape(1) - 2
-!         d2 = vals_shape(2) - 2
-!         d3 = vals_shape(3) - 2
-!         allocate(this%send_buf(0:2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+7))
-!         allocate(this%recv_buf(0:2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+7))
+         vals_shape = shape(this%values)
+         d1 = vals_shape(2) - 2
+         d2 = vals_shape(3) - 2
+         d3 = vals_shape(4) - 2
+         allocate(this%send_buf(0:this%nmats * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+8)-1))
+         allocate(this%recv_buf(0:this%nmats * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+8)-1))
       end if
    end subroutine Set_communication
 
@@ -151,7 +151,7 @@ Constructor_init_val%nmats = d4
    subroutine Exchange_virtual_space_blocking (this, ghost_width)
       class (data_4d_t), intent(in out) :: this
       real(8), dimension(:,:,:), allocatable :: send_buf, recv_buf
-      integer, dimension(3) :: vals_shape
+      integer, dimension(4) :: vals_shape
       integer, optional :: ghost_width
       integer :: ghost_width_local
       integer :: ghost_width_local_x
@@ -206,204 +206,370 @@ Constructor_init_val%nmats = d4
 
    subroutine Get_recv_buf(this)
       class (data_4d_t), intent(in out) :: this
-      integer, dimension(3) :: vals_shape
-      integer :: d1, d2, d3, x, y, z
+      integer, dimension(4) :: vals_shape
+      integer :: d1, d2, d3, x, y, z, m
+      m=this%nmats
 
-!      vals_shape = shape(this%values)
-!      d1 = vals_shape(1) - 2
-!      d2 = vals_shape(2) - 2
-!      d3 = vals_shape(3) - 2
+      vals_shape = shape(this%values)
+      d1 = vals_shape(2) - 2
+      d2 = vals_shape(3) - 2
+      d3 = vals_shape(4) - 2
 
       x = this%parallel_params%my_coords(1)
       y = this%parallel_params%my_coords(2)
       z = this%parallel_params%my_coords(3)
 
-!      if (x+1 /= this%parallel_params%npx+1) then
-!         this%values(d1+1, 0:d2+1, 0:d3+1) = reshape(this%recv_buf(0 : (d2+2)*(d3+2)-1), (/d2+2, d3+2/))
-!      end if
-!
-!      if (x-1 /= 0) then
-!         this%values(0, 0:d2+1, 0:d3+1) = reshape(this%recv_buf((d2+2)*(d3+2) : 2*(d2+2)*(d3+2)-1), (/d2+2, d3+2/))
-!      end if
-!
-!      if (y+1 /= this%parallel_params%npy+1) then
-!         this%values(0:d1+1, d2+1, 0:d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2) : 2*(d2+2)*(d3+2)+(d1+2)*(d3+2)-1), (/d1+2, d3+2/))
-!      end if
-!      if (y-1 /= 0) then
-!         this%values(0:d1+1, 0, 0:d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+(d1+2)*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)-1), (/d1+2, d3+2/))
-!      end if
-!      if (z+1 /= this%parallel_params%npz+1) then
-!         this%values(0:d1+1, 0:d2+1, d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2)-1), (/d1+2, d2+2/))
-!      end if
-!      if (z-1 /= 0) then
-!         this%values(0:d1+1, 0:d2+1, 0) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)-1), (/d1+2, d2+2/))
-!      end if
-!
-!      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1) then
-!         this%values(d1+1, d2+1, 0:d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+(d3+2)-1), (/d3+2/))
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0) then
-!         this%values(d1+1, 0, 0:d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+2*(d3+2)-1), (/d3+2/))
-!      end if
-!      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1) then
-!         this%values(0, d2+1, 0:d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+2*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+3*(d3+2)-1), (/d3+2/))
-!      end if
-!      if (x-1 /= 0 .and. y-1 /= 0) then
-!         this%values(0, 0, 0:d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+3*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)-1), (/d3+2/))
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%values(d1+1, 0:d2+1, d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+(d2+2)-1), (/d2+2/))
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. z-1 /= 0) then
-!         this%values(d1+1, 0:d2+1, 0) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+2*(d2+2)-1), (/d2+2/))
-!      end if
-!      if (x-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%values(0, 0:d2+1, d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+2*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+3*(d2+2)-1), (/d2+2/))
-!      end if
-!      if (x-1 /= 0 .and. z-1 /= 0) then
-!         this%values(0, 0:d2+1, 0) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+3*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)-1), (/d2+2/))
-!      end if
-!      if (y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%values(0:d1+1, d2+1, d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+(d1+2)-1), (/d1+2/))
-!      end if
-!      if (y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
-!         this%values(0:d1+1, d2+1, 0) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+(d1+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+2*(d1+2)-1), (/d1+2/))
-!      end if
-!      if (y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%values(0:d1+1, 0, d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+2*(d1+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+3*(d1+2)-1), (/d1+2/))
-!      end if
-!      if (y-1 /= 0 .and. z-1 /= 0) then
-!         this%values(0:d1+1, 0, 0) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+3*(d1+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)-1), (/d1+2/))
-!      end if
-!
-!
-!
-!      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%values(d1+1, d2+1, d3+1) = this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2))
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
-!         this%values(d1+1, d2+1, 0) = this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+1)
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%values(d1+1, 0, d3+1) = this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+2)
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0 .and. z-1 /= 0) then
-!         this%values(d1+1, 0, 0) = this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+3)
-!      end if
-!      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%values(0, d2+1, d3+1) = this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+4)
-!      end if
-!      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
-!         this%values(0, d2+1, 0) = this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+5)
-!      end if
-!      if (x-1 /= 0 .and. y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%values(0, 0, d3+1) = this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+6)
-!      end if
-!      if (x-1 /= 0 .and. y-1 /= 0 .and. z-1 /= 0) then
-!         this%values(0, 0, 0) = this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+7)
-!      end if
+      !from right
+      if (x+1 /= this%parallel_params%npx+1) then
+         this%values(1:m, d1+1, 0:d2+1, 0:d3+1) = reshape(this%recv_buf(0 : m * ((d2+2)*(d3+2))-1), (/m, d2+2, d3+2/))
+      end if
+
+      !from left
+      if (x-1 /= 0) then
+         this%values(1:m, 0, 0:d2+1, 0:d3+1) = reshape(this%recv_buf(m * ((d2+2)*(d3+2)) :&
+                     m * (2*(d2+2)*(d3+2))-1), (/m, d2+2, d3+2/))
+      end if
+
+      !from front
+      if (y+1 /= this%parallel_params%npy+1) then
+         this%values(1:m, 0:d1+1, d2+1, 0:d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)) :&
+                     m * (2*(d2+2)*(d3+2)+(d1+2)*(d3+2))-1), (/m, d1+2, d3+2/))
+      end if
+
+      !from rear
+      if (y-1 /= 0) then
+         this%values(1:m, 0:d1+1, 0, 0:d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+(d1+2)*(d3+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2))-1), (/m, d1+2, d3+2/))
+      end if
+
+      !from up
+      if (z+1 /= this%parallel_params%npz+1) then
+         this%values(1:m, 0:d1+1, 0:d2+1, d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2))-1), (/m, d1+2, d2+2/))
+      end if
+
+      !from down
+      if (z-1 /= 0) then
+         this%values(1:m, 0:d1+1, 0:d2+1, 0) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2))-1), (/m, d1+2, d2+2/))
+      end if
+
+      !from diagonal of i+1, j+1
+      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1) then
+         this%values(1:m, d1+1, d2+1, 0:d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+(d3+2))-1), (/m, d3+2/))
+      end if
+
+      !from diagonal of i+1, j-1
+      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0) then
+         this%values(1:m, d1+1, 0, 0:d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+(d3+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+2*(d3+2))-1), (/m, d3+2/))
+      end if
+
+      !from diagonal of i-1, j+1
+      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1) then
+         this%values(1:m, 0, d2+1, 0:d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+2*(d3+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+3*(d3+2))-1), (/m, d3+2/))
+      end if
+
+      !from diagonal of i-1, j-1
+      if (x-1 /= 0 .and. y-1 /= 0) then
+         this%values(1:m, 0, 0, 0:d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+3*(d3+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2))-1), (/m, d3+2/))
+      end if
+
+      !from diagonal of i+1, k+1
+      if (x+1 /= this%parallel_params%npx+1 .and. z+1 /= this%parallel_params%npz+1) then
+         this%values(1:m, d1+1, 0:d2+1, d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+(d2+2))-1), (/m, d2+2/))
+      end if
+
+      !from diagonal of i+1, k-1
+      if (x+1 /= this%parallel_params%npx+1 .and. z-1 /= 0) then
+         this%values(1:m, d1+1, 0:d2+1, 0) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+(d2+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+2*(d2+2))-1), (/m, d2+2/))
+      end if
+
+      !from diagonal of i-1, k+1
+      if (x-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
+         this%values(1:m, 0, 0:d2+1, d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+2*(d2+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+3*(d2+2))-1), (/m, d2+2/))
+      end if
+
+      !from diagonal of i-1, k-1
+      if (x-1 /= 0 .and. z-1 /= 0) then
+         this%values(1:m, 0, 0:d2+1, 0) = reshape(this%recv_buf(m* (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+3*(d2+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2))-1), (/m, d2+2/))
+      end if
+
+      !from diagonal of j+1, k+1
+      if (y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
+         this%values(1:m, 0:d1+1, d2+1, d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+(d1+2))-1), (/m, d1+2/))
+      end if
+
+      !from diagonal of j+1, k-1
+      if (y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
+         this%values(1:m, 0:d1+1, d2+1, 0) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+(d1+2)) :&
+                     m* (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+2*(d1+2))-1), (/m, d1+2/))
+      end if
+
+      !from diagonal of j-1, k+1
+      if (y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
+         this%values(1:m, 0:d1+1, 0, d3+1) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+2*(d1+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+3*(d1+2))-1), (/m, d1+2/))
+      end if
+
+      !from diagonal of j-1, k-1
+      if (y-1 /= 0 .and. z-1 /= 0) then
+         this%values(1:m, 0:d1+1, 0, 0) = reshape(this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+3*(d1+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2))-1), (/m, d1+2/))
+      end if
+
+      !from diagonal of i+1, j+1, k+1
+      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
+         this%values(1:m, d1+1, d2+1, d3+1) = this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+1)-1)
+      end if
+
+      !from diagonal of i+1, j+1, k-1
+      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
+         this%values(1:m, d1+1, d2+1, 0) = this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+1) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+2)-1)
+      end if
+
+      !from diagonal of i+1, j-1, k+1
+      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
+         this%values(1:m, d1+1, 0, d3+1) = this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+2) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+3)-1)
+      end if
+
+      !from diagonal of i+1, j-1, k-1
+      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0 .and. z-1 /= 0) then
+         this%values(1:m, d1+1, 0, 0) = this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+3) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+4)-1)
+      end if
+
+      !from diagonal of i-1, j+1, k+1
+      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
+         this%values(1:m, 0, d2+1, d3+1) = this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+4) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+5)-1)
+      end if
+
+      !from diagonal of i-1, j+1, k-1
+      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
+         this%values(1:m, 0, d2+1, 0) = this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+5) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+6)-1)
+      end if
+
+      !from diagonal of i-1, j-1, k+1
+      if (x-1 /= 0 .and. y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
+         this%values(1:m, 0, 0, d3+1) = this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+6) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+7)-1)
+      end if
+
+      !from diagonal of i-1, j-1, k-1
+      if (x-1 /= 0 .and. y-1 /= 0 .and. z-1 /= 0) then
+         this%values(1:m, 0, 0, 0) = this%recv_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+7) :&
+                     m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+8)-1)
+      end if
    end subroutine Get_recv_buf
 
 
    subroutine Set_send_buf(this)
       class (data_4d_t), intent(in out) :: this
-      integer, dimension(3) :: vals_shape
+      integer, dimension(4) :: vals_shape
       integer :: d1, d2, d3, x, y, z, offset
+      integer :: m
 
-!      vals_shape = shape(this%values)
-!      d1 = vals_shape(1) - 2
-!      d2 = vals_shape(2) - 2
-!      d3 = vals_shape(3) - 2
+      m = this%nmats
+      vals_shape = shape(this%values)
+      d1 = vals_shape(2) - 2
+      d2 = vals_shape(3) - 2
+      d3 = vals_shape(4) - 2
 
       x = this%communication%parallel_params%my_coords(1)
       y = this%communication%parallel_params%my_coords(2)
       z = this%communication%parallel_params%my_coords(3)
       offset = this%communication_parameters%dim_offset
 
-!      if (x+1 /= this%parallel_params%npx+1) then
-!         this%send_buf(0 : (d2+2)*(d3+2)-1) = reshape(this%values(d1 - offset, 0:d2+1, 0:d3+1), (/d2+2 * d3+2/))
-!      end if
-!
-!      if (x-1 /= 0) then
-!         this%send_buf((d2+2)*(d3+2) : 2*(d2+2)*(d3+2)-1) = reshape(this%values(1 + offset, 0:d2+1, 0:d3+1), (/d2+2 * d3+2/))
-!      end if
-!
-!      if (y+1 /= this%parallel_params%npy+1) then
-!         this%send_buf(2*(d2+2)*(d3+2) : 2*(d2+2)*(d3+2)+(d1+2)*(d3+2)-1) = reshape(this%values(0:d1+1, d2 - offset, 0:d3+1), (/d1+2 * d3+2/))
-!      end if
-!      if (y-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+(d1+2)*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)-1) = reshape(this%values(0:d1+1, 1 + offset, 0:d3+1), (/d1+2 * d3+2/))
-!      end if
-!      if (z+1 /= this%parallel_params%npz+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2)-1) = reshape(this%values(0:d1+1, 0:d2+1, d3 - offset), (/d1+2 * d2+2/))
-!      end if
-!      if (z-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)-1) = reshape(this%values(0:d1+1, 0:d2+1, 1 + offset), (/d1+2 * d2+2/))
-!      end if
-!
-!      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+(d3+2)-1) = this%values(d1 - offset, d2 - offset, 0:d3+1)
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+2*(d3+2)-1) = this%values(d1 - offset, 1 + offset, 0:d3+1)
-!      end if
-!      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+2*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+3*(d3+2)-1) = this%values(1 + offset, d2 - offset, 0:d3+1)
-!      end if
-!      if (x-1 /= 0 .and. y-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+3*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)-1) = this%values(1+offset, 1+offset, 0:d3+1)
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+(d2+2)-1) = this%values(d1 - offset, 0:d2+1, d3 - offset)
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. z-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+2*(d2+2)-1) = this%values(d1 - offset, 0:d2+1, 1 + offset)
-!      end if
-!      if (x-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+2*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+3*(d2+2)-1) = this%values(1 + offset, 0:d2+1, d3 - offset)
-!      end if
-!      if (x-1 /= 0 .and. z-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+3*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)-1) = this%values(1 + offset, 0:d2+1, 1 + offset)
-!      end if
-!      if (y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+(d1+2)-1) = this%values(0:d1+1, d2 - offset, d3 - offset)
-!      end if
-!      if (y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+(d1+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+2*(d1+2)-1) = this%values(0:d1+1, d2 - offset, 1 + offset)
-!      end if
-!      if (y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+2*(d1+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+3*(d1+2)-1) = this%values(0:d1+1, 1 + offset, d3 - offset)
-!      end if
-!      if (y-1 /= 0 .and. z-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+3*(d1+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)-1) = this%values(0:d1+1, 1 + offset, 1+offset)
-!      end if
-!
-!
-!
-!      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)) = this%values(d1- offset, d2-offset, d3-offset)
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+1) = this%values(d1-offset, d2-offset, 1 + offset)
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+2) = this%values(d1-offset, 1+offset, d3-offset)
-!      end if
-!      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0 .and. z-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+3) = this%values(d1-offset, 1+offset, 1+offset)
-!      end if
-!      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+4) = this%values(1+offset, d2-offset, d3-offset)
-!      end if
-!      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+5) = this%values(1+offset, d2-offset, 1+offset)
-!      end if
-!      if (x-1 /= 0 .and. y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+6) = this%values(1+offset, 1+offset, d3-offset)
-!      end if
-!      if (x-1 /= 0 .and. y-1 /= 0 .and. z-1 /= 0) then
-!         this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+7) = this%values(1+offset, 1+offset, 1+offset)
-!      end if
+      !to right
+      if (x+1 /= this%parallel_params%npx+1) then
+         this%send_buf(0 : m * ((d2+2)*(d3+2))-1) = &
+                        reshape(this%values(1:m, d1 - offset, 0:d2+1, 0:d3+1), (/m * (d2+2) * (d3+2)/))
+      end if
+
+      !to left
+      if (x-1 /= 0) then
+         this%send_buf(m * ((d2+2)*(d3+2)) : m * (2*(d2+2)*(d3+2))-1) = &
+                        reshape(this%values(1:m, 1 + offset, 0:d2+1, 0:d3+1), (/m * (d2+2) * (d3+2)/))
+      end if
+
+      !to front
+      if (y+1 /= this%parallel_params%npy+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)) : m * (2*(d2+2)*(d3+2)+(d1+2)*(d3+2))-1) = &
+                        reshape(this%values(1:m, 0:d1+1, d2 - offset, 0:d3+1), (/m * (d1+2) * (d3+2)/))
+      end if
+
+      !to rear
+      if (y-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+(d1+2)*(d3+2)) : m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2))-1) = &
+                        reshape(this%values(1:m, 0:d1+1, 1 + offset, 0:d3+1), (/m * (d1+2) * (d3+2)/))
+      end if
+
+      !to up
+      if (z+1 /= this%parallel_params%npz+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)) : m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2))-1) = &
+                        reshape(this%values(1:m, 0:d1+1, 0:d2+1, d3 - offset), (/m * (d1+2) * (d2+2)/))
+      end if
+
+      !to down
+      if (z-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2))-1) = &
+                        reshape(this%values(1:m, 0:d1+1, 0:d2+1, 1 + offset), (/m * (d1+2) * (d2+2)/))
+      end if
+
+      !to diagonal of i+1, j+1
+      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+(d3+2))-1) = &
+                        reshape(this%values(1:m, d1 - offset, d2 - offset, 0:d3+1), (/m * (d3+2)/))
+      end if
+
+      !to diagonal of i+1, j-1
+      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+(d3+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+2*(d3+2))-1) = &
+                        reshape(this%values(1:m, d1 - offset, 1 + offset, 0:d3+1), (/m * (d3+2)/))
+      end if
+
+      !to diagonal of i-1, j+1
+      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+2*(d3+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+3*(d3+2))-1) = &
+                        reshape(this%values(1:m, 1 + offset, d2 - offset, 0:d3+1), (/m * (d3+2)/))
+      end if
+
+      !to diagonal of i-1, j-1
+      if (x-1 /= 0 .and. y-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+3*(d3+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2))-1) = &
+                        reshape(this%values(1:m, 1+offset, 1+offset, 0:d3+1), (/m * (d3+2)/))
+      end if
+
+      !to diagonal of i+1, k+1
+      if (x+1 /= this%parallel_params%npx+1 .and. z+1 /= this%parallel_params%npz+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+(d2+2))-1) = &
+                        reshape(this%values(1:m, d1 - offset, 0:d2+1, d3 - offset), (/m * (d2+2)/))
+      end if
+
+      !to diagonal of i+1, k-1
+      if (x+1 /= this%parallel_params%npx+1 .and. z-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+(d2+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+2*(d2+2))-1) = &
+                        reshape(this%values(1:m, d1 - offset, 0:d2+1, 1 + offset), (/m * (d2+2)/))
+      end if
+
+      !to diagonal of i-1, k+1
+      if (x-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+2*(d2+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+3*(d2+2))-1) = &
+                        reshape(this%values(1:m, 1 + offset, 0:d2+1, d3 - offset), (/m * (d2+2)/))
+      end if
+
+      !to diagonal of i-1, k-1
+      if (x-1 /= 0 .and. z-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+3*(d2+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2))-1) = &
+                        reshape(this%values(1:m, 1 + offset, 0:d2+1, 1 + offset), (/m * (d2+2)/))
+      end if
+
+      !to diagonal of j+1, k+1
+      if (y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)) : &
+                        m* (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+(d1+2))-1) = &
+                        reshape(this%values(1:m, 0:d1+1, d2 - offset, d3 - offset), (/m * (d1+2)/))
+      end if
+
+      !to diagonal of j+1, k-1
+      if (y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+(d1+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+2*(d1+2))-1) = &
+                        reshape(this%values(1:m, 0:d1+1, d2 - offset, 1 + offset), (/m * (d1+2)/))
+      end if
+
+      !to diagonal of j-1, k+1
+      if (y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+2*(d1+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+3*(d1+2))-1) = &
+                        reshape(this%values(1:m, 0:d1+1, 1 + offset, d3 - offset), (/m * (d1+2)/))
+      end if
+
+      !to diagonal of j-1, k-1
+      if (y-1 /= 0 .and. z-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+3*(d1+2)) : &
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2))-1) = &
+                        reshape(this%values(1:m, 0:d1+1, 1 + offset, 1+offset), (/m * (d1+2)/))
+      end if
+
+
+      !to diagonal of i+1, j+1, k+1
+      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)) :&
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+1)-1) = &
+                        this%values(1:m, d1- offset, d2-offset, d3-offset)
+      end if
+
+      !to diagonal of i+1, j+1, k-1
+      if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+1) :&
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+2)-1) = &
+                        this%values(1:m, d1-offset, d2-offset, 1 + offset)
+      end if
+
+      !to diagonal of i+1, j-1, k+1
+      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+2) :&
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+3)-1) = &
+                        this%values(1:m, d1-offset, 1+offset, d3-offset)
+      end if
+
+      !to diagonal of i+1, j-1, k-1
+      if (x+1 /= this%parallel_params%npx+1 .and. y-1 /= 0 .and. z-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+3) :&
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+4)-1) = &
+                        this%values(1:m, d1-offset, 1+offset, 1+offset)
+      end if
+
+      !to diagonal of i-1, j+1, k+1
+      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1 .and. z+1 /= this%parallel_params%npz+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+4) :&
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+5)-1) = &
+                        this%values(1:m, 1+offset, d2-offset, d3-offset)
+      end if
+
+      !to diagonal of i-1, j+1, k-1
+      if (x-1 /= 0 .and. y+1 /= this%parallel_params%npy+1 .and. z-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+5) :&
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+6)-1) = &
+                        this%values(1:m, 1+offset, d2-offset, 1+offset)
+      end if
+
+      !to diagonal of i-1, j-1, k+1
+      if (x-1 /= 0 .and. y-1 /= 0 .and. z+1 /= this%parallel_params%npz+1) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+6) :&
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+7)-1) = &
+                        this%values(1:m, 1+offset, 1+offset, d3-offset)
+      end if
+
+      !to diagonal of i-1, j-1, k-1
+      if (x-1 /= 0 .and. y-1 /= 0 .and. z-1 /= 0) then
+         this%send_buf(m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+7) :&
+                        m * (2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+8)-1) = &
+                        this%values(1:m, 1+offset, 1+offset, 1+offset)
+      end if
    end subroutine Set_send_buf
 
 
