@@ -2059,7 +2059,7 @@ contains
         this%adv_mats%area_left_out (mat_fix)  = this%adv_mats%area_left_out(mat_fix)   * fac
         this%adv_mats%total_out (mat_fix)      = this%adv_mats%total_out(mat_fix)       * fac
 
-        area_t_out(mat_fix,i, 1 ,1)     = area_t_out(mat_fix,i, 1 ,1) * fac
+        area_t_out_max(mat_fix,i, 1 ,1)     = area_t_out_max(mat_fix,i, 1 ,1) * fac
 
         call this%Calculate_cell_quantities_in_advect(i, j, k)
 
