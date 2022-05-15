@@ -1502,7 +1502,7 @@ contains
         real(8), dimension(:, :, :, :), pointer :: cell_mass_vof
         real(8), dimension(:, :, :, :), pointer :: mat_cell_mass_adv
         real(8), dimension(:, :, :), pointer :: vof
-        real(8), dimension(:, :, :, :), pointer :: vof_adv
+        real(8), dimension(:, :, :), pointer :: vof_adv
         real(8), dimension(:, :, :, :), pointer :: mat_vof
         real(8), dimension(:, :, :, :), pointer :: mat_vof_adv
         real(8), dimension(:, :, :), pointer :: n_materials_in_cell
