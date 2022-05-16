@@ -1,4 +1,4 @@
-# Install script for directory: /home/reemh/eclipse-workspace/Backus_test/src/Diagnostics
+# Install script for directory: /home/reemh/eclipse-workspace_ronw/Backus/src/Diagnostics
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

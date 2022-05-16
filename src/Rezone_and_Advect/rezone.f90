@@ -269,7 +269,7 @@ contains
 
       do k = 1, this%nzp
          do j = 1, this%nyp
-            do i = 1, this%nyp
+            do i = 1, this%nxp
                velocity_sq = velocity_z(i, j, k) * velocity_z(i, j, k) &
                   + velocity_y(i, j, k) * velocity_y(i, j, k) &
                   + velocity_x(i, j, k) * velocity_x(i, j, k)

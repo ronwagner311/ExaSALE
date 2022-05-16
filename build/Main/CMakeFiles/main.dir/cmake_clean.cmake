@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/reemh/eclipse-workspace/Backus_test/src/exec/main"
-  "/home/reemh/eclipse-workspace/Backus_test/src/exec/main.pdb"
+  "/home/reemh/eclipse-workspace_ronw/Backus/src/exec/main"
+  "/home/reemh/eclipse-workspace_ronw/Backus/src/exec/main.pdb"
   "CMakeFiles/main.dir/main.f90.o"
 )
 

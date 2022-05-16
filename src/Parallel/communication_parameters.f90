@@ -45,6 +45,7 @@ contains
      integer (kind=MPI_address_kind), dimension(2) :: send_start_left_right, send_start_rear_front, send_start_down_up
      real(8) :: r8
      integer :: rank 
+write(*,*) "CREATING COM PARAM RAGIL"
      call MPI_comm_rank(comm, rank, ierror) 
       r8 = 0
 
@@ -394,6 +395,8 @@ contains
      integer (kind=MPI_address_kind), dimension(2) :: send_start_left_right, send_start_rear_front, send_start_down_up
      real(8) :: r8
      integer :: rank
+     write(*,*) "CREATING COM PARAM MATERIAL"
+     write(*,*) nmats,d1,d2,d3
      call MPI_comm_rank(comm, rank, ierror)
       r8 = 0
 
@@ -408,22 +411,27 @@ contains
 
      call MPI_type_create_subarray(4, global_sizes, (/nmats, 1, d2+2, d3+2/), (/0, 0, 0, 0/), &
         MPI_ORDER_FORTRAN, MPI_DOUBLE_PRECISION, left_right_t, ierror)
+        write(*,*) "CREATED SUBARRAY MATERIAL"
      call MPI_type_create_subarray(4, global_sizes, (/nmats, d1+2, 1, d3+2/), (/0, 0, 0, 0/), &
         MPI_ORDER_FORTRAN, MPI_DOUBLE_PRECISION, rear_front_t, ierror)
+        write(*,*) "CREATED SUBARRAY MATERIAL"
      call MPI_type_create_subarray(4, global_sizes, (/nmats, d1+2, d2+2, 1/), (/0, 0, 0, 0/), &
         MPI_ORDER_FORTRAN, MPI_DOUBLE_PRECISION, up_down_t, ierror)
-
+        write(*,*) "CREATED SUBARRAY MATERIAL"
      call MPI_type_create_subarray(4, global_sizes, (/nmats, 1, 1, d3+2/), (/0, 0, 0, 0/), &
         MPI_ORDER_FORTRAN, MPI_DOUBLE_PRECISION, z_diag_t, ierror)
+        write(*,*) "CREATED SUBARRAY MATERIAL"
      call MPI_type_create_subarray(4, global_sizes, (/nmats, 1, d2+2, 1/), (/0, 0, 0, 0/), &
         MPI_ORDER_FORTRAN, MPI_DOUBLE_PRECISION, y_diag_t, ierror)
+        write(*,*) "CREATED SUBARRAY MATERIAL"
      call MPI_type_create_subarray(4, global_sizes, (/nmats, d1+2, 1, 1/), (/0, 0, 0, 0/), &
         MPI_ORDER_FORTRAN, MPI_DOUBLE_PRECISION, x_diag_t, ierror)
+        write(*,*) "CREATED SUBARRAY MATERIAL"
 
      call MPI_type_create_subarray(4, global_sizes, (/nmats, 1, 1, 1/), (/0, 0, 0, 0/), &
         MPI_ORDER_FORTRAN, MPI_DOUBLE_PRECISION, mats_t, ierror)
 
-
+    write(*,*) "CREATED SUBARRAY MATERIAL"
      call MPI_type_commit(left_right_t, ierror)
      call MPI_type_commit(rear_front_t, ierror)
      call MPI_type_commit(up_down_t, ierror)

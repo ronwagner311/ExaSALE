@@ -198,6 +198,7 @@ contains
         Constructor%wilkins_scheme = df%sw_wilkins
         nc = 1
 
+        write(*,*),"this n mat: ", Constructor%n_materials
 
 
         allocate(Constructor%time)
@@ -855,7 +856,8 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
         this%communication_parameters_vertex = communication_parameters_t(this%nxp, this%nyp, this%nzp, num_neighbors, communicator,&
             df%npx, df%npy, df%npz, coords, 1)
 
-        this%communication_parameters_material = communication_parameters_t(this%n_materials, this%nxp, this%nyp, this%nzp, num_neighbors, communicator,&
+        write(*,*), "mats num: ", df%reduct_num_mat
+        this%communication_parameters_material = communication_parameters_t(df%reduct_num_mat, this%nxp, this%nyp, this%nzp, num_neighbors, communicator,&
             df%npx, df%npy, df%npz, coords, 1)
 
 

@@ -117,15 +117,15 @@
     "layers_materials": {
         "number_layers_j": 1, 
         "number_cells_j": [
-            10
+            12
         ], 
         "number_layers_k":1, 
         "number_cells_k": [
-            10
+            12
         ], 
         "number_layers_i": 1, 
         "number_cells_i": [
-	    10
+	    12
         ], 
         "materials": [
             "Be", 
@@ -151,9 +151,9 @@
         "rezone_type": "euler"
     },
     "parallel": {
-	"np": 1,
-	"npx":1,
-	"npy":1,
-	"npz":1
+	"np": 27,
+	"npx":3,
+	"npy":3,
+	"npz":3
     }
 }
