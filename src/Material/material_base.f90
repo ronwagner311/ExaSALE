@@ -58,6 +58,7 @@ contains
 !      real(8)                               , intent(in)           :: sie_0
       type(cell_bc_wrapper_t), dimension(:), pointer,  intent(in) :: bc_cell   
       type(boundary_parameters_t), pointer, intent(in) :: bc_params
+
       allocate(this%cell_mass)
       allocate(this%initial_layers_of_mats)
       allocate(this%sie)

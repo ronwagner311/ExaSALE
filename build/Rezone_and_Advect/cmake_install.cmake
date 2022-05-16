@@ -1,4 +1,4 @@
-# Install script for directory: /home/reemh/eclipse-workspace_ronw/Backus/src/Rezone_and_Advect
+# Install script for directory: /home/reemh/eclipse-workspace/Backus_test/src/Rezone_and_Advect
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

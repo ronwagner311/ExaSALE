@@ -1777,31 +1777,19 @@ contains
         call this%total_sie        %Point_to_data(sie)
         call this%total_vof        %Point_to_data(vof)
         call this%a_visc           %Point_to_data(a_visc)
-        call this%total_density    %Point_to_data(density_vof)
         call this%num_mat_cells    %Point_to_data(nmats_in_cell)
-        call this%rezone%material_volume%Point_to_data(mat_vol)
         call this%rezone%Point_to_data (material_x, material_y, material_z)
-        call this%rezone%Point_to_volume(mat_vol)
+        call this%rezone%material_volume%Point_to_data(mat_vol)
 
 
 
         call this%materials%temperature%Point_to_data(temperature_vof)
         call this%materials%cell_mass  %Point_to_data(cell_mass_vof)
         call this%materials%pressure   %Point_to_data(pressure_vof)
-        call this%materials%density    %Point_to_data(density_vof)
         call this%materials%dp_drho    %Point_to_data(dp_drho_vof)
         call this%materials%dp_de      %Point_to_data(dp_de_vof)
         call this%materials%sie        %Point_to_data(sie_vof)
         call this%materials%vof        %Point_to_data(mat_vof)
-
-
-
-
-
-
-
-
-
 
         do k = 1, this%nz
             do j = 1, this%ny
@@ -2428,14 +2416,14 @@ contains
     end subroutine Calculate_stresd
 
 
-    subroutine Set_communication(this, comm, comm_params_cell, comm_params_vertex)
+    subroutine Set_communication(this, comm, comm_params_cell, comm_params_vertex, comm_material)
         class (hydro_step_t)            :: this 
         type(communication_t), pointer            :: comm
-        type(communication_parameters_t), pointer :: comm_params_cell, comm_params_vertex
+        type(communication_parameters_t), pointer :: comm_params_cell, comm_params_vertex, comm_material
 
 
 
-        call this%advect%Set_communication(comm, comm_params_cell, comm_params_vertex)
+        call this%advect%Set_communication(comm, comm_params_cell, comm_params_vertex, comm_material)
         call this%rezone%Set_communication(comm, comm_params_cell, comm_params_vertex)
     end subroutine Set_communication
 

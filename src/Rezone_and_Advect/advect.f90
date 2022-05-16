@@ -674,6 +674,13 @@ contains
 
         call this%volume%Point_to_data(vol)
 
+        im = max(i - 1, 1 )
+        ip = min(i + 1, nx)
+
+
+        jm = max(j - 1, 1 )
+        jp = min(j + 1, ny)
+
         if (ind_mat /= 0) then
             call this%materials%vof%Point_to_data(mat_vof)
             f1 = 0.25d0 * (mat_vof(ind_mat,ip, j , 1) * vol(ip, j , 1) + mat_vof(ind_mat,ip, jm, 1) * vol(ip, jm, 1) + &
@@ -715,14 +722,6 @@ contains
         end if
 
 
-
-        im = max(i - 1, 1 )
-        ip = min(i + 1, nx)
-
-
-
-        jm = max(j - 1, 1 )
-        jp = min(j + 1, ny)
 
 
 
@@ -1724,7 +1723,6 @@ contains
 
 
         call this%materials%cell_mass%Point_to_data(cell_mass_vof)
-        call this%materials%sie      %Point_to_data(sie_vof)
         call this%materials%vof      %Point_to_data(mat_vof)
         call this%adv_mats %cell_mass%Point_to_data(mat_cell_mass_adv)
         call this%adv_mats %sie      %Point_to_data(sie_vof_adv)
@@ -1749,8 +1747,6 @@ contains
                 area_out           * density_vof(tmp_mat, i  , j  , 1) * sie_vof(tmp_mat, i  , j  , 1)
 
             mat_vof_adv_tmp(tmp_mat)  = area_r_in + area_l_in + area_t_in(tmp_mat, i, 1 ,1) + area_b_in + area_out
-
-
 
 
             if (this%advect_init_layer_mat > 0) then
@@ -2258,7 +2254,7 @@ contains
         real(8), dimension(:, :, :, :), pointer :: mat_vof_adv
         real(8), dimension(:, :, :, :), pointer :: sie_vof_adv
         real(8), dimension(:, :, :, :), pointer :: mat_cell_mass_adv
-        real(8), dimension(:, :, :, :), pointer :: cell_mass_adv
+        real(8), dimension(:, :, :), pointer :: cell_mass_adv
 
         real(8), dimension(:, :, :, :), pointer :: init_mat_layers
 
@@ -2372,10 +2368,6 @@ contains
         wall_z_bot = this%parallel_params%is_wall_z_bot
 
 
-
-
-
-        this%cyc_delete=this%cyc_delete+1
         call this%rezone  %Point_to_coordinates_3d(material_x, material_y, material_z)
         call this%mesh    %Point_to_data          (         x,          y,          z)
         call this%velocity%Point_to_data          (velocity_x, velocity_y, velocity_z)
@@ -2391,6 +2383,15 @@ contains
         call this%num_mat_cells%Point_to_data(n_materials_in_cell)
         call this%vof_advect%Point_to_data(vof_adv)
         call this%adv_mats%vof%Point_to_data(mat_vof_adv)
+        call this%adv_mats%Point_to_initial_layers(init_mat_layers_adv)
+        call this%adv_mats%cell_mass%Point_to_data(mat_cell_mass_adv)
+        call this%adv_mats%sie%Point_to_data(sie_vof_adv)
+
+        call this%materials%vof%Point_to_data(mat_vof)
+        call this%materials%density%Point_to_data(density_vof)
+        call this%materials%sie%Point_to_data(sie_vof)
+        call this%materials%cell_mass%Point_to_data(cell_mass_vof)
+        call this%materials%Point_to_initial_layers(init_mat_layers)
 
         allocate(vof_correction(this%nx, this%ny, this%nz))
 
@@ -2449,14 +2450,6 @@ contains
         mat_vof_adv = 0d0
 
 
-
-        call this%adv_mats%Point_to_initial_layers(init_mat_layers_adv)
-        call this%adv_mats%cell_mass%Point_to_data(mat_cell_mass_adv)
-        call this%adv_mats%sie%Point_to_data(sie_vof_adv)
-
-        call this%materials%sie%Point_to_data(sie_vof)
-        call this%materials%cell_mass%Point_to_data(cell_mass_vof)
-        call this%materials%Point_to_initial_layers(init_mat_layers)
         do k = 0, this%nzp
             do j = 0, this%nyp
                 do i = 0, this%nxp
@@ -2741,7 +2734,7 @@ contains
 
 
                                 if (mat_id(i, j, k) == tmp_mat) then
-                                    cell_mass_adv(tmp_mat, i, j, k) = cell_mass_adv(tmp_mat, i, j, k) + donnor_mass
+                                    cell_mass_adv(i, j, k) = cell_mass_adv(i, j, k) + donnor_mass
                                 end if
 
                                 if (this%shorter_advect) then
@@ -3138,7 +3131,6 @@ contains
 
         numit = 0
         call this%rezone   %Point_to_coordinates_3d (x_lag, y_lag, z_lag)
-        call this%total_vof% Point_to_data (vof)
         call this%num_mat_cells%Point_to_data (n_materials_in_cell)
 
 
@@ -3580,10 +3572,10 @@ contains
 
     end subroutine Get_all_areas
 
-    subroutine Set_communication(this, comm, comm_params_cell, comm_params_vertex)
+    subroutine Set_communication(this, comm, comm_params_cell, comm_params_vertex, comm_material)
         class (advect_t)            :: this
         type(communication_t), pointer            :: comm
-        type(communication_parameters_t), pointer :: comm_params_cell, comm_params_vertex
+        type(communication_parameters_t), pointer :: comm_params_cell, comm_params_vertex, comm_material
         integer :: i, num_mat
 
 
@@ -3594,7 +3586,7 @@ contains
 
         call this%momentum%Set_communication(comm, comm_params_vertex)
 
-            call this%adv_mats%Set_communication_material_advect(comm, comm_params_cell)
+            call this%adv_mats%Set_communication_material_advect(comm, comm_material)
 
     end subroutine Set_communication
 

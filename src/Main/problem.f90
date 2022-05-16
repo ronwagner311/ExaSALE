@@ -112,6 +112,7 @@ module problem_module
         type(communication_t), pointer            :: communication
         type(communication_parameters_t), pointer :: communication_parameters_cell
         type(communication_parameters_t), pointer :: communication_parameters_vertex
+        type(communication_parameters_t), pointer :: communication_parameters_material
         integer                                   :: communicator
         !type (cr_t), pointer                                    :: cr
 
@@ -562,7 +563,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
         call this%total_inverse_vertex_mass%Set_communication(this%communication, this%communication_parameters_cell)
 
         !        do i = 1, this%n_materials
-        call this%materials%Set_communication_material(this%communication, this%communication_parameters_cell)
+        call this%materials%Set_communication_material(this%communication, this%communication_parameters_material)
         !        end do
 
         call this%total_density%Set_communication(this%communication, this%communication_parameters_cell)
@@ -577,7 +578,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
         end if
 
         call this%hydro%Set_communication(this%communication, this%communication_parameters_cell, &
-            this%communication_parameters_vertex)
+            this%communication_parameters_vertex, this%communication_parameters_material)
         return
     end subroutine Set_communication
 
@@ -833,6 +834,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
 
         allocate(this%communication_parameters_cell)
         allocate(this%communication_parameters_vertex)
+        allocate(this%communication_parameters_material)
 
         call MPI_comm_rank(MPI_COMM_WORLD, my_rank1, ierr)
 
@@ -851,6 +853,9 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
             df%npx, df%npy, df%npz, coords, 0)
 
         this%communication_parameters_vertex = communication_parameters_t(this%nxp, this%nyp, this%nzp, num_neighbors, communicator,&
+            df%npx, df%npy, df%npz, coords, 1)
+
+        this%communication_parameters_material = communication_parameters_t(this%n_materials, this%nxp, this%nyp, this%nzp, num_neighbors, communicator,&
             df%npx, df%npy, df%npz, coords, 1)
 
 
