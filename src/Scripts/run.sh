@@ -18,5 +18,5 @@ then
 	scr_mpirun -n 1 -mca btl self,sm,openib python ../Main/main.py
 else
 #	mpirun -n 1 -mca btl self,sm,openib ../exec/main
-    mpirun -n 27 ../exec/main
+    mpirun -n 1 ../exec/main
 fi

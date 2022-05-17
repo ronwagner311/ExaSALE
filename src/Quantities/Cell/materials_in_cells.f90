@@ -28,6 +28,7 @@ module materials_in_cells_module
     interface materials_in_cells_t
 
         module procedure Constructor_2d
+        module procedure Constructor_3d_sedov_taylor
         module procedure Constructor_3d_pyramid
         module procedure Constructor_3d_sod
 
@@ -174,9 +175,7 @@ write(*,*) " making the sod"
         deallocate(start_index)
     end function
 
-    type(materials_in_cells_t) function Constructor_3d(d1, d2, d3, bc,bc_params, nc, number_layers_i, number_layers_j&
-                                                     , number_layers_k, &
-                                                       number_cells_i, number_cells_j, number_cells_k, mat_index, parallel_params)
+    type(materials_in_cells_t) function Constructor_3d_sedov_taylor(d1, d2, d3, bc,bc_params, parallel_params)
         use parallel_parameters_module ,only : parallel_parameters_t
         implicit none
         type(parallel_parameters_t), pointer              , intent(inout) :: parallel_params
@@ -184,16 +183,8 @@ write(*,*) " making the sod"
         integer                                           , intent(in) :: d2           
         integer                                           , intent(in) :: d3           
         type(cell_bc_wrapper_t), dimension(:), pointer    , intent(in) :: bc           
-        integer                                           , intent(in) :: nc
-        integer                                           , intent(in) :: number_layers_i  
-        integer                                           , intent(in) :: number_layers_j  
-        integer                                           , intent(in) :: number_layers_k  
-        integer, dimension(:), allocatable                , intent(in) :: number_cells_i
-        integer, dimension(:), allocatable                , intent(in) :: number_cells_j
-        integer, dimension(:), allocatable                , intent(in) :: number_cells_k
-        type(boundary_parameters_t), pointer, intent(in) :: bc_params
+        type(boundary_parameters_t)          , pointer    , intent(in) :: bc_params
 
-        integer, dimension(:), allocatable                , intent(in) :: mat_index
 
         real(8), allocatable, dimension (:,:,:)                        :: init_values  
         integer :: i_curr, j_curr, k_curr, num_mat, lay_k, lay_j, lay_i, i, j, k, ele_i, ele_j, ele_k
@@ -218,27 +209,32 @@ write(*,*) " making the sod"
         j_to = j_to - 1
         k_to = k_to - 1
 
-
+        write(*,*) " making sedov-taylor"
 
 
 
         DO K=1, d3 - 1
             DO J=1, d2 - 1
                 DO I=1, d1 - 1
-                    if (i+j+k < (d3-1)+2+(d3-1)/2) then
-                        init_values(i, j, k) = 1
-                    else if (i+j+k > (d3-1)+2+(d3-1)/2) then
-                        init_values(i, j, k) = 2
-                    else
-                        init_values(i, j, k) = 3
+                    if ( (i_from <= i .and. i <= i_to) .and. &
+                         (j_from <= j .and. j <= j_to) .and. &
+                         (k_from <= k .and. k <= k_to)) then
+                        if (parallel_params%i_virt(i) == 1 .and. &
+                            parallel_params%j_virt(j) == 1 .and. &
+                            parallel_params%k_virt(k) == 1) then
+                            !write(*,*), "in section 1",i,j,k
+                            init_values(i, j, k) = 1
+                        else
+                            init_values(i, j, k) = 2
+                        end if
                     end if
+                    write(*,*),"init_values: ",i,j,k, init_values(i,j,k)
                 END DO
             END DO
         END DO
 
 
-
-        call Constructor_3d%Init_cell_quantity_init_arr (init_values, d1, d2, d3, bc, bc_params)
+        call Constructor_3d_sedov_taylor%Init_cell_quantity_init_arr (init_values, d1, d2, d3, bc, bc_params)
         deallocate(init_values)
     end function
 

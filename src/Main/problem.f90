@@ -317,9 +317,13 @@ contains
                 Constructor%mat_cells = materials_in_cells_t(nxp, nyp, nzp, bc_c_wrap_arr,Constructor%boundary_params,&
                     df%number_layers_i, df%number_cells_i, &
                     df%mat_index, Constructor%parallel_params)
-            else 
-                Constructor%mat_cells = materials_in_cells_t(nxp, nyp, nzp, bc_c_wrap_arr,Constructor%boundary_params,&
+            else
+                if (df%mat_sie_0(1) == 0d0) then
+                    Constructor%mat_cells = materials_in_cells_t(nxp, nyp, nzp, bc_c_wrap_arr,Constructor%boundary_params,&
                     1,df%mat_index, Constructor%parallel_params)
+                else
+                    Constructor%mat_cells = materials_in_cells_t(nxp, nyp, nzp, bc_c_wrap_arr,Constructor%boundary_params, Constructor%parallel_params)
+                end if
             end if
             allocate(mesh_3d)
             mesh_3d = mesh_3d_t(df, bc_v_wrap_coordinates_arr, Constructor%boundary_params, Constructor%parallel_params)
