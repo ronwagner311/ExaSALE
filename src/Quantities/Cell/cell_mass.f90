@@ -50,7 +50,7 @@ contains
       type(cell_bc_wrapper_t), dimension(:), pointer    , intent(in) :: bc           
       type(boundary_parameters_t), pointer, intent(in) :: bc_params
 
-write(*,*)d1,d2,d3
+
       call Constructor_init_val%Init_cell_quantity_init_val (initial_val, d1, d2, d3, bc, bc_params)
    end function
 
@@ -80,7 +80,7 @@ write(*,*)d1,d2,d3
             end do
          end do
       end do
-write(*,*) "cell_mass calc", init_values(1,1,1),d1,d2,d3
+
       call Constructor_vol_density%Init_cell_quantity_init_arr (init_values, d1, d2, d3, bc, bc_params)
       deallocate(init_values)
    end function
@@ -126,7 +126,7 @@ call this%Point_to_data(cm)
             end do
          end do
       end do
-write(*,*) "calculated cell mass:", cm(1,1,1)
+
    end subroutine Calculate_cell_mass
 
    subroutine Write_cell_mass(this, unit, iostat, iomsg)

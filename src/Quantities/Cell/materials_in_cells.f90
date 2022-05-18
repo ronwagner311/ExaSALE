@@ -218,7 +218,7 @@ write(*,*) " making the sod"
                         if (parallel_params%i_virt(i) == 1 .and. &
                             parallel_params%j_virt(j) == 1 .and. &
                             parallel_params%k_virt(k) == 1) then
-                            write(*,*), "in section 1",i,j,k
+                            !write(*,*), "in section 1",i,j,k
                             init_values(i, j, k) = 1
                         else
                             init_values(i, j, k) = 2

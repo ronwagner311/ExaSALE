@@ -201,7 +201,7 @@ contains
         Constructor%rezone_type = df%rezone_type
         nc = 1
 
-        write(*,*),"this n mat: ", Constructor%n_materials
+
 
 
         allocate(Constructor%time)
@@ -232,7 +232,7 @@ contains
         !        allocate(Constructor%cr)
         allocate(textual_diagnostic_t :: Constructor%textual_diagnostics(0:df%num_diag_text))
          !       allocate(Constructor%textual_diagnostics_hdf5(0:df%num_diag_hdf5))
-        write(*,*) "num of mats:", df%reduct_num_mat
+
         allocate(material_t    :: Constructor%materials)
 
 !        allocate(eos_wrapper_t :: Constructor%total_eos (df%reduct_num_mat))
@@ -357,6 +357,7 @@ contains
         call Constructor%total_volume%Point_to_data (vol)
 
 
+
         call Constructor%Create_materials (df, bc_c_wrap_arr, Constructor%mat_cells)
 
 
@@ -379,6 +380,7 @@ contains
             Constructor%total_vertex_mass = vertex_mass_t(0d0, nxp + 1, nyp + 1, &
                 1, bc_v_wrap_arr,Constructor%boundary_params )
         end if
+
 
         if (Constructor%wilkins_scheme == 1) then 
             Constructor%previous_cell_mass = cell_mass_t (0d0, Constructor%nxp, Constructor%nyp, Constructor%nzp , bc_c_wrap_arr&
@@ -410,7 +412,7 @@ contains
                     df%init_temperature           ,&
                     Constructor%n_materials, Constructor%materials, Constructor%num_mat_cells     ,&
                     Constructor%mat_cells, Constructor%emf, Constructor%emfm, Constructor%parallel_params, df%mat_index)
- 
+
         !Constructor%cr = cr_t(Constructor%hydro, Constructor%time,Constructor%boundary_params ,df%run_name, df%with_cr)
  
         !        if ( df%num_diag_hdf5 > 0 ) then
@@ -874,7 +876,7 @@ if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Apply()
         this%communication_parameters_vertex = communication_parameters_t(this%nxp, this%nyp, this%nzp, num_neighbors, communicator,&
             df%npx, df%npy, df%npz, coords, 1)
 
-        write(*,*), "mats num: ", df%reduct_num_mat
+
         this%communication_parameters_material = communication_parameters_t(df%reduct_num_mat, this%nxp, this%nyp, this%nzp, num_neighbors, communicator,&
             df%npx, df%npy, df%npz, coords, 1)
 
@@ -900,7 +902,7 @@ if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Apply()
         call omp_set_num_threads(max_threads)
 
         threads = omp_get_num_threads()
-        write(*,*) "Number of threads:", threads
+
         if (threads /= max_threads) then
             write(*,*) "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
             write(*,*) "Warning, number of threads doesn't match number of threads set in datafile"
