@@ -16,5 +16,8 @@ This project is built via cmake. In order to create the makefiles, simply enter 
 
 ## Execution
 To run the code simply execute the bash script ./run.sh located in src/Scripts. The script executes the mpirun command, so beware that if you change number of processes in the datafile, this line should be updated.
+To run the code using slurm execute the python script slurm_run.py located in src/Scripts. The script checks the number of processes in the datafile and send the relevant job to slurm.
 
-The script runs the datafile located in src/Datafiles/datafile.json
+The scripts runs the datafile located in src/Datafiles/datafile.json
+
+
