@@ -597,10 +597,10 @@ int c_silo_write_node_data_double_vector(char *var_name, double *values, double 
  */
 int c_silo_write_zone_data_int(char *var_name, int *values) {
 
-	int *dims_sizes1;
+	int *dims_sizes1, i;
 	dims_sizes1 = malloc(dimensions * sizeof(int));
 
-	for ( int i=0 ; i<dimensions ; ++i)
+	for ( i=0 ; i<dimensions ; ++i)
 		dims_sizes1[i] = _gsi.dims_sizes[i] -1;
 
 	if ((DBPutQuadvar1(_gsi.silo_file, var_name, "mesh", values,
@@ -625,10 +625,10 @@ int c_silo_write_zone_data_int(char *var_name, int *values) {
  */
 int c_silo_write_zone_data_float(char *var_name, float *values) {
 
-	int *dims_sizes1;
+	int *dims_sizes1, i;
 	dims_sizes1 = malloc(dimensions * sizeof(int));
 
-	for ( int i=0 ; i<dimensions ; ++i)
+	for ( i=0 ; i<dimensions ; ++i)
 		dims_sizes1[i] = _gsi.dims_sizes[i] -1;
 
 	if ((DBPutQuadvar1(_gsi.silo_file, var_name, "mesh", values,
@@ -652,10 +652,10 @@ int c_silo_write_zone_data_float(char *var_name, float *values) {
  */
 int c_silo_write_zone_data_double(char *var_name, double *values) {
 
-	int *dims_sizes1;
+	int *dims_sizes1, i;
 	dims_sizes1 = malloc(dimensions * sizeof(int));
 
-	for ( int i=0 ; i<dimensions ; ++i)
+	for (  i=0 ; i<dimensions ; ++i)
 		dims_sizes1[i] = _gsi.dims_sizes[i] -1;
 
 	if ((DBPutQuadvar1(_gsi.silo_file, var_name, "mesh", values,

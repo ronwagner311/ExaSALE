@@ -1,0 +1,1 @@
+Cycle:064, Vertex:1331, Storage:5.280457 (MB), CPU_Time:1.000000, Clock_Time:0.020000 (seconds)

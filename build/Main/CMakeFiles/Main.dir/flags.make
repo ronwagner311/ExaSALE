@@ -6,5 +6,5 @@ Fortran_FLAGS = -fPIC -O0 -cpp -g -fpp -fpe0 -traceback -fp-model source -fimf-a
 
 Fortran_DEFINES = 
 
-Fortran_INCLUDES = -I/include -I/home/reemh/Downloads/json-fortran 
+Fortran_INCLUDES = -I/include -I/home/reemh/Downloads/json-fortran -I/opt/sw/ScientificLibraries/Silo/4.11/include 
 

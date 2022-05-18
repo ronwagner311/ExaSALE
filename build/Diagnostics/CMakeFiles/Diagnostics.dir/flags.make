@@ -6,5 +6,5 @@ Fortran_FLAGS = -fPIC -O0 -cpp -g -fpp -fpe0 -traceback -fp-model source -fimf-a
 
 Fortran_DEFINES = -DDiagnostics_EXPORTS
 
-Fortran_INCLUDES = 
+Fortran_INCLUDES = -I/opt/sw/ScientificLibraries/Silo/4.11/include 
 

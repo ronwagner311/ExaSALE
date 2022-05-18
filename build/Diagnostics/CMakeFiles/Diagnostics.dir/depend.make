@@ -3,6 +3,14 @@
 
 # Note that incremental build could trigger a call to cmake_copy_f90_mod on each re-build
 
+Diagnostics/CMakeFiles/Diagnostics.dir/silo_diagnostic.f90.o: Diagnostics/CMakeFiles/Silo.dir/silo_fortran_to_c_interface.mod.stamp
+Diagnostics/CMakeFiles/Diagnostics.dir/silo_diagnostic.f90.o.provides.build: Diagnostics/CMakeFiles/Diagnostics.dir/silo_diagnostic_module.mod.stamp
+Diagnostics/CMakeFiles/Diagnostics.dir/silo_diagnostic_module.mod.stamp: Diagnostics/CMakeFiles/Diagnostics.dir/silo_diagnostic.f90.o
+	$(CMAKE_COMMAND) -E cmake_copy_f90_mod modules/silo_diagnostic_module.mod Diagnostics/CMakeFiles/Diagnostics.dir/silo_diagnostic_module.mod.stamp Intel
+Diagnostics/CMakeFiles/Diagnostics.dir/silo_diagnostic.f90.o.provides.build:
+	$(CMAKE_COMMAND) -E touch Diagnostics/CMakeFiles/Diagnostics.dir/silo_diagnostic.f90.o.provides.build
+Diagnostics/CMakeFiles/Diagnostics.dir/build: Diagnostics/CMakeFiles/Diagnostics.dir/silo_diagnostic.f90.o.provides.build
+
 Diagnostics/CMakeFiles/Diagnostics.dir/textual_diagnostic.f90.o.provides.build: Diagnostics/CMakeFiles/Diagnostics.dir/textual_diagnostic_module.mod.stamp
 Diagnostics/CMakeFiles/Diagnostics.dir/textual_diagnostic_module.mod.stamp: Diagnostics/CMakeFiles/Diagnostics.dir/textual_diagnostic.f90.o
 	$(CMAKE_COMMAND) -E cmake_copy_f90_mod modules/textual_diagnostic_module.mod Diagnostics/CMakeFiles/Diagnostics.dir/textual_diagnostic_module.mod.stamp Intel
