@@ -14,6 +14,9 @@ Usages:
 ...  
 
 """
+
+author_help = "Parsing done!!!"
+
 RED   = "\033[1;31m"
 BLUE  = "\033[1;34m"
 CYAN  = "\033[1;36m"
@@ -37,17 +40,32 @@ def runner(df):
     os.chmod(sbatch_file_path, 0o777)
     N = int(numpy.ceil(np / 32.0))
 
-    execute_command = "mpirun -n {0} -mca btl self,sm,openib ../exec/main".format(np)
+    #execute_command = "mpirun -n {0} -mca btl self,sm,openib ../exec/main".format(np)
+    execute_command = "mpirun -n {0} /home/reemh/eclipse-workspace_ronw/Backus/src/exec/main".format(np)
 
+#    sbatch_file.write(
+#        '#!/bin/bash\n'
+#        + '#SBATCH -n {0} -N {1} --exclusive --threads-per-core={2} -p mixedp --error=slurm-%j.err --output=slurm-%j.out\n'.format(
+#            np, N, threads)
+#		+ 'export OMP_NUM_THREADS={0}\n'.format(threads)
+#        + 'module load cmake/X.XX.2 eclipse/2018 gcc/9.1.0 intel/2017 json-fortran/intel-2017 mpi/openmpi-1.10.4-intel-2017 pFUnit/3.2.9-openmpi-1.10.4-intel-2017 hdf5/1.8.9-openmpi-1.10.4-intel-2017 silo/4.8-openmpi-1.10.4-intel-2017 anaconda/2.5.0 \n'
+#        + 'source activate backus-openmpi-1.10.4-intel-2017\n'
+#        + '{0}\n'.format(execute_command)
+#    )
+    job_submit_str = '#!/bin/bash\n#SBATCH -n {0} -N {1} --exclusive --threads-per-core={2} -p mixedp --error=slurm-%j.err --output=slurm-%j.out\nexport OMP_NUM__THREADS={3}\nmodule load intel/18.0.1.163 openmpi/4.0.4_intel mpi/impi-intel2018 cmake anaconda2\n{4}\n'.format(np, N, threads,threads, execute_command)
+    
+    print(job_submit_str)
+    
+    #sbatch_file.write(job_submit_str)
     sbatch_file.write(
         '#!/bin/bash\n'
-        + '#SBATCH -n {0} -N {1} --exclusive --threads-per-core={2} -p sc --error=slurm-%j.err --output=slurm-%j.out\n'.format(
+        + '#SBATCH -n {0} -N {1} --exclusive --threads-per-core={2} -p mixedp --error=slurm-%j.err --output=slurm-%j.out\n'.format(
             np, N, threads)
-	+ 'export OMP_NUM_THREADS={0}\n'.format(threads)
-        + 'module load cmake/X.XX.2 eclipse/2018 gcc/9.1.0 intel/2017 json-fortran/intel-2017 mpi/openmpi-1.10.4-intel-2017 pFUnit/3.2.9-openmpi-1.10.4-intel-2017 hdf5/1.8.9-openmpi-1.10.4-intel-2017 silo/4.8-openmpi-1.10.4-intel-2017 anaconda/2.5.0 \n'
-        + 'source activate backus-openmpi-1.10.4-intel-2017\n'
+        + 'export OMP_NUM_THREADS={0}\n'.format(threads)
+        + 'module load intel/18.0.1.163 openmpi/4.0.4_intel mpi/impi-intel2018 cmake anaconda2\n'
         + '{0}\n'.format(execute_command)
-    )
+    )    
+
     sbatch_file.close()
     #
     sub_proc = subprocess.Popen(['sbatch', sbatch_file_path], cwd=os.path.curdir)

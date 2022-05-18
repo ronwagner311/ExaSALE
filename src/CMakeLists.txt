@@ -5,7 +5,9 @@ enable_language (Fortran)
 
 #set(CMAKE_Fortran_COMPILER ifort)
 #set(FC "ifort")
-set(CMAKE_Fortran_FLAGS "-fPIC -O0 -cpp -g -fpp -fpe0 -traceback -fp-model source -fimf-arch-consistency=true -fp-stack-check -debug -check bounds -check format -check output_conversion -check pointers  -check uninit -qopenmp")
+#set(CMAKE_Fortran_FLAGS "-fPIC -O0 -cpp -g -fpp -fpe0 -traceback -fp-model source -fimf-arch-consistency=true -fp-stack-check -debug -check bounds -check format -check output_conversion -check pointers  -check uninit -qopenmp")
+set(CMAKE_Fortran_FLAGS "-fPIC -O2 -ipo -cpp -g -fpp -fpe0 -traceback -fp-model source -fimf-arch-consistency=true -fp-stack-check -debug -check bounds -check format -check output_conversion -check pointers  -check uninit -qopenmp")
+
 #set(CMAKE_Fortran_FLAGS "-g -qopenmp -fpp -fPIC -traceback -fpe0")
 #set(CMAKE_Fortran_FLAGS "-fPIC -O0 -g -fpp -fpe0 -traceback -qopenmp -cpp -fp-model precise -fp-model precise -fp-model source -fimf-arch-consistency=true -fp-stack-check -debug")
 add_definitions($ENV{DEFS})

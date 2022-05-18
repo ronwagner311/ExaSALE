@@ -64,6 +64,7 @@ module problem_module
         integer                                               :: ny         
         integer                                               :: nz         
         integer                                               :: dimension
+        integer                                               :: rezone_type
 
 
 
@@ -196,6 +197,7 @@ contains
         Constructor%dimension  = df%dimension
         Constructor%n_materials = df%reduct_num_mat
         Constructor%wilkins_scheme = df%sw_wilkins
+        Constructor%rezone_type = df%rezone_type
         nc = 1
 
         write(*,*),"this n mat: ", Constructor%n_materials
@@ -654,6 +656,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
         type(communication_parameters_t), pointer       :: comm_params
         type(communication_t)    , pointer       :: communication
         integer :: aaaai
+        integer :: ncyc, max_ncyc
         !        call this%cr%Get_ckpt_name(this%name, ckpt_name)
 #ifdef DEBUG
         write(*,*) '@@@@ ATTACHE TO PROCESS AND CHANGE i to 0 TO CONTINUE EXECUTION @@@@'
@@ -668,30 +671,40 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
 
         reem_total = omp_get_wtime()
                         call this%Write_to_files()
+        ncyc = 1
+        if (this%rezone_type == 0) then
+            max_ncyc = 21
+        else
+            max_ncyc = 201
+        end if
 
         if (this%mesh%dimension == 2) then
-            do while (this%time%Should_continue())
+            do while (this%time%Should_continue() .and. ncyc < max_ncyc)
                 call this%hydro%do_time_step_2d(this%time)
                 call this%time%Update_time()
                 call this%Write_to_files()
+                ncyc = ncyc + 1
 !                write(*,*)" DONE CYCLE!"
             !       call this%cr%Checkpoint(ckpt_name)
             end do
 
         else if (this%mesh%dimension == 3) then
-            do while (this%time%Should_continue())
+            do while (this%time%Should_continue() .and. ncyc < max_ncyc)
                 reem_start = omp_get_wtime()
                 call this%hydro%do_time_step_3d(this%time)
                 call this%time%Update_time()
                 call this%Write_to_files()
                 counter = counter + 1
+                ncyc = ncyc + 1
             !      call this%cr%Checkpoint(ckpt_name)
             end do
         end if
 
 
         call this%Close_files()
+        write(71,*) "Total Time:", omp_get_wtime() - reem_total
         write(*,*) "Total Time:", omp_get_wtime() - reem_total
+        write(*,*) "ncyc: ", ncyc-1
     end subroutine Start_calculation
 
     subroutine Create_materials(this, df, bc_c_wrap_arr, mat_cell)

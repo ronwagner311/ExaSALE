@@ -123,10 +123,6 @@ write(*,*) " making the sod"
             END DO
         END DO
 
-
-
-
-
         call Constructor_3d_sod%Init_cell_quantity_init_arr (init_values, d1, d2, d3, bc, bc_params)
         deallocate(init_values)
     end function
@@ -228,7 +224,7 @@ write(*,*) " making the sod"
                             init_values(i, j, k) = 2
                         end if
                     end if
-                    write(*,*),"init_values: ",i,j,k, init_values(i,j,k)
+                    !write(*,*),"init_values: ",i,j,k, init_values(i,j,k)
                 END DO
             END DO
         END DO
