@@ -22,3 +22,10 @@ To run the code using slurm execute the python script slurm_run.py located in sr
 The scripts runs the datafile located in src/Datafiles/datafile.json
 
 
+## Sedov-Taylor
+
+To execute sedov-taylor please refer to the datafile Datafiles/datafile_sedov_taylor_3d.json, simply execute the code explained above.
+
+![Initial Problem](https://github.com/Scientific-Computing-Lab-NRCN/Backus/tree/main/Images/visit00005.png?raw=true)
+
+
