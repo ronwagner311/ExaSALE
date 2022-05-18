@@ -25,7 +25,14 @@ The scripts runs the datafile located in src/Datafiles/datafile.json
 ## Sedov-Taylor
 
 To execute sedov-taylor please refer to the datafile Datafiles/datafile_sedov_taylor_3d.json, simply execute the code explained above.
-
+For example this is the initial state of the problem (3D, 15^3 cells)
 ![Initial Problem](https://github.com/Scientific-Computing-Lab-NRCN/Backus/blob/main/Images/visit0005.png)
 
 
+Lagrangian mesh:
+
+![Lagrange](https://github.com/Scientific-Computing-Lab-NRCN/Backus/blob/main/Images/visit0007.png)
+
+
+ALE:
+![ALE](https://github.com/Scientific-Computing-Lab-NRCN/Backus/blob/main/Images/visit0006.png)
