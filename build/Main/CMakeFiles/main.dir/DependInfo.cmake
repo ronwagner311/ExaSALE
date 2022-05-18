@@ -14,6 +14,7 @@ set(CMAKE_Fortran_SUBMODULE_EXT ".smod")
 set(CMAKE_Fortran_TARGET_INCLUDE_PATH
   "/include"
   "/home/reemh/Downloads/json-fortran"
+  "/opt/sw/ScientificLibraries/Silo/4.11/include"
   )
 
 # Targets to which this target links.

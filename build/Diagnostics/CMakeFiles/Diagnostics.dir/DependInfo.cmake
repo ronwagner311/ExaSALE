@@ -18,7 +18,7 @@ set(CMAKE_TARGET_DEFINITIONS_Fortran
 
 # The include file search paths:
 set(CMAKE_Fortran_TARGET_INCLUDE_PATH
-  "/include"
+  "/opt/sw/ScientificLibraries/Silo/4.11/include"
   )
 
 # Targets to which this target links.
