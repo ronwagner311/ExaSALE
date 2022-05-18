@@ -1,4 +1,4 @@
-# Backus: A Scalabale Framework for Scientific Code in Modern Fortran and MPI-3
+# Backus: A Scalable Framework for Scientific Code in Modern Fortran and MPI-3
 This repository contains the code that originates for the idea presented [https://arxiv.org/abs/1910.06415].
 
 
