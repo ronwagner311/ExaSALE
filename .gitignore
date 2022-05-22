@@ -2,3 +2,6 @@ build/**
 src/Scripts/*.txt
 **/build
 **Silo_Diagnostics
+**slurm-*
+**memes*
+**.nfs*
