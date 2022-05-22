@@ -1,2 +1,4 @@
-build/*
+build/**
 src/Scripts/*.txt
+**/build
+**Silo_Diagnostics
