@@ -16,7 +16,7 @@ This code was tested with:
 The src folder contains the source code files of Backus, here is a short documentation of its subfolders.
 
 |Folder                    |Documentation                                                                   |
-|:---:                     |:---:                                                                           |
+|:---:                     |:---                                                                            |
 |**Boundary_conditions**   |Contains the classes that implement the Boundary Conditions                     |
 |**CR**                    |Contains the classes that implement the Checkpoint Restart                      |
 |**Datafiles**             |Contains all the input datafiles for Backus                                     |
