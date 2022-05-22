@@ -31,7 +31,7 @@ The src folder contains the source code files of Backus, here is a short documen
 |**Rezone_and_Advect**     |Contains the implementation of the rezone and advection classes                 |
 |**Scripts**               |Contains the Scripts code files                                                 |
 |**Time_step**             |Contains the hydrodynamic time step implementation                              |
-|**exec**                  |Contains the executable file, that created after compilation                    |
+|**exec**                  |Contains the executable file, created after compilation                         |
 
 
 ## Compile & Install
