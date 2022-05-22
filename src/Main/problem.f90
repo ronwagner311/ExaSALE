@@ -38,7 +38,7 @@ module problem_module
     use time_module                     , only : time_t
     use textual_diagnostic_module       , only : textual_diagnostic_t
     use silo_diagnostic_module       , only : silo_diagnostic_t
-!    use diagnostic_module               , only : diagnostic_t, textual_diagnostic_t, plot_diagnostic_t!, silo_diagnostic_t, plot_diagnostic_t, &
+    !    use diagnostic_module               , only : diagnostic_t, textual_diagnostic_t, plot_diagnostic_t!, silo_diagnostic_t, plot_diagnostic_t, &
     !        textual_diagnostic_hdf5_t, Static_hdf5_init, Static_hdf5_close
     use communication_parameters_module , only : communication_parameters_t
     use communication_module            , only : communication_t
@@ -103,11 +103,11 @@ module problem_module
         type (data_t)                  , pointer :: total_dt_drho_deriv 
 
         type (material_t)   , pointer             :: materials
-!        type (eos_wrapper_t), dimension(:), allocatable         :: total_eos
+        !        type (eos_wrapper_t), dimension(:), allocatable         :: total_eos
         type (textual_diagnostic_t), dimension(:), allocatable  :: textual_diagnostics
         !        type (textual_diagnostic_hdf5_t), dimension(:), allocatable  :: textual_diagnostics_hdf5
-                type (silo_diagnostic_t), pointer                       :: silo_diagnostic
-!        type (plot_diagnostic_t), pointer                       :: plot_diagnostic
+        type (silo_diagnostic_t), pointer                       :: silo_diagnostic
+        !        type (plot_diagnostic_t), pointer                       :: plot_diagnostic
 
         type(boundary_parameters_t), pointer :: boundary_params
 
@@ -235,7 +235,7 @@ contains
 
         allocate(material_t    :: Constructor%materials)
 
-!        allocate(eos_wrapper_t :: Constructor%total_eos (df%reduct_num_mat))
+        !        allocate(eos_wrapper_t :: Constructor%total_eos (df%reduct_num_mat))
         allocate(Constructor%boundary_params)
         if (df%dimension == 2) allocate(bc_v_wrap_arr(4))
         if (df%dimension == 3) allocate(bc_v_wrap_arr(6))
@@ -323,7 +323,7 @@ contains
             else
                 if (df%mat_sie_0(1) == 0d0) then
                     Constructor%mat_cells = materials_in_cells_t(nxp, nyp, nzp, bc_c_wrap_arr,Constructor%boundary_params,&
-                    1,df%mat_index, Constructor%parallel_params)
+                        1,df%mat_index, Constructor%parallel_params)
                 else
                     Constructor%mat_cells = materials_in_cells_t(nxp, nyp, nzp, bc_c_wrap_arr,Constructor%boundary_params, Constructor%parallel_params)
                 end if
@@ -398,20 +398,20 @@ contains
         !        a_visc, total_dp_de, total_dp_drho, total_dt_de, total_dt_drho, init_temperature, &
         !        nmats, materials, num_mat_cells, mat_id, emf, emfm, parallel_params, mat_ids
 
-                Constructor%hydro = hydro_step_t(df, Constructor%nx , Constructor%ny , Constructor%nz, Constructor%nxp         ,&
-                    Constructor%nyp, Constructor%nzp, Constructor%wilkins_scheme, Constructor%mesh,&
-                    Constructor%velocity , Constructor%acceleration, Constructor%total_volume     ,&
-                    Constructor%total_vof, Constructor%total_sie   , Constructor%total_pressure   ,&
-                    Constructor%total_pressure_sum, Constructor%total_density                     ,&
-                    Constructor%total_temperature,  Constructor%total_cell_mass                   ,&
-                    Constructor%previous_cell_mass, Constructor%total_vertex_mass                 ,&
-                    Constructor%previous_vertex_mass, Constructor%total_inverse_vertex_mass       ,&
-                    Constructor%total_sound_vel,    Constructor%a_visc                            ,&
-                    Constructor%total_dp_de_deriv,  Constructor%total_dp_drho_deriv               ,&
-                    Constructor%total_dt_de_deriv,  Constructor%total_dt_drho_deriv               ,&
-                    df%init_temperature           ,&
-                    Constructor%n_materials, Constructor%materials, Constructor%num_mat_cells     ,&
-                    Constructor%mat_cells, Constructor%emf, Constructor%emfm, Constructor%parallel_params, df%mat_index)
+        Constructor%hydro = hydro_step_t(df, Constructor%nx , Constructor%ny , Constructor%nz, Constructor%nxp         ,&
+            Constructor%nyp, Constructor%nzp, Constructor%wilkins_scheme, Constructor%mesh,&
+            Constructor%velocity , Constructor%acceleration, Constructor%total_volume     ,&
+            Constructor%total_vof, Constructor%total_sie   , Constructor%total_pressure   ,&
+            Constructor%total_pressure_sum, Constructor%total_density                     ,&
+            Constructor%total_temperature,  Constructor%total_cell_mass                   ,&
+            Constructor%previous_cell_mass, Constructor%total_vertex_mass                 ,&
+            Constructor%previous_vertex_mass, Constructor%total_inverse_vertex_mass       ,&
+            Constructor%total_sound_vel,    Constructor%a_visc                            ,&
+            Constructor%total_dp_de_deriv,  Constructor%total_dp_drho_deriv               ,&
+            Constructor%total_dt_de_deriv,  Constructor%total_dt_drho_deriv               ,&
+            df%init_temperature           ,&
+            Constructor%n_materials, Constructor%materials, Constructor%num_mat_cells     ,&
+            Constructor%mat_cells, Constructor%emf, Constructor%emfm, Constructor%parallel_params, df%mat_index)
 
         !Constructor%cr = cr_t(Constructor%hydro, Constructor%time,Constructor%boundary_params ,df%run_name, df%with_cr)
  
@@ -425,9 +425,9 @@ contains
         do i=1, size(df%diag_types(:))
             word = df%diag_types(i)
             if (Str_eqv(word, 'plot') .eqv. .TRUE.) then
-!                allocate(Constructor%plot_diagnostic)
-!                Constructor%plot_diagnostic = plot_diagnostic_t()
-!                call Constructor%plot_diagnostic%Init_diagnostic(Constructor%hydro, Constructor%time, 110 + i)
+            !                allocate(Constructor%plot_diagnostic)
+            !                Constructor%plot_diagnostic = plot_diagnostic_t()
+            !                call Constructor%plot_diagnostic%Init_diagnostic(Constructor%hydro, Constructor%time, 110 + i)
             else if (Str_eqv(word, 'silo') .eqv. .TRUE.) then
                 allocate(Constructor%silo_diagnostic)
                 Constructor%silo_diagnostic = silo_diagnostic_t()
@@ -438,7 +438,7 @@ contains
                 call Constructor%textual_diagnostics(text_diag_counter)%Init_diagnostic(Constructor%hydro,Constructor%time,counter&
                     , Constructor%parallel_params%my_rank)
                 text_diag_counter = text_diag_counter + 1
-!                write(*,*), "problem:", word
+            !                write(*,*), "problem:", word
             !else if (Str_eqv(word, 'hdf5') .eqv. .TRUE.) then
             !    word = df%diag_names(i)
             !    Constructor%textual_diagnostics_hdf5(hdf5_diag_counter) = textual_diagnostic_hdf5_t(word, 110 + i)
@@ -448,17 +448,25 @@ contains
             !    hdf5_diag_counter = hdf5_diag_counter + 1
             end if
         end do
-        write(*,*) "Done diagnostics"
 
         call Constructor%Set_communication()
 
         call Constructor%mesh%Exchange_virtual_space_blocking()
         call Constructor%total_vof%Exchange_virtual_space_blocking()
 
+        write(*,*) "Done diagnostics"
+
         if(Constructor%dimension == 3) then
+
             call Constructor%boundary_params%Calculate_edge_vector_3d(Constructor%mesh%coordinates%data)
             call Constructor%boundary_params%Calculate_boundary_normal_3d(Constructor%mesh%coordinates%data)
+
             call Constructor%mesh%coordinates%Apply_boundary(Constructor%mesh%coordinates%data)
+
+            call Constructor%mesh%coordinates%Exchange_virtual_space_blocking()
+            !            write(*,*)Constructor%parallel_params%my_rank, Constructor%boundary_params%parallel_params%is_wall_x_bot,Constructor%boundary_params%parallel_params%is_wall_x_top&
+            !            , Constructor%boundary_params%parallel_params%is_wall_y_bot,Constructor%boundary_params%parallel_params%is_wall_y_top&
+            !            , Constructor%boundary_params%parallel_params%is_wall_z_bot,Constructor%boundary_params%parallel_params%is_wall_z_top
             call Constructor%mesh%Calculate_average_coordinates()
 
             do i = 1, 3
@@ -511,8 +519,8 @@ contains
             Constructor%total_inverse_vertex_mass)
         call Constructor%total_inverse_vertex_mass%Exchange_virtual_space_blocking()
 
-call Constructor%materials%density%point_to_data(density_vof)
-call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
+        call Constructor%materials%density%point_to_data(density_vof)
+        call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
 
         do k = 1, Constructor%nz
             do j = 1, Constructor%ny
@@ -597,11 +605,11 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
         integer :: i
         integer, save :: counter_diag = 0
 
-        do i=1,size(this%textual_diagnostics(1:))
-            call this%textual_diagnostics(i)%Apply()
-!            write(*,*) "WRITING"
-        end do
-if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Apply()
+        !        do i=1,size(this%textual_diagnostics(1:))
+        !            call this%textual_diagnostics(i)%Apply()
+        !!            write(*,*) "WRITING"
+        !        end do
+        !if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Apply()
         !       do i=1,size(this%textual_diagnostics_hdf5(1:))
         !           call this%textual_diagnostics_hdf5(i)%Apply
         !       end do
@@ -626,7 +634,7 @@ if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Apply()
         !            call this%textual_diagnostics_hdf5(i)%Close_diagnostic
         !        end do
 
-!        if ( associated(this%plot_diagnostic) ) call this%plot_diagnostic%Close_diagnostic
+        !        if ( associated(this%plot_diagnostic) ) call this%plot_diagnostic%Close_diagnostic
         if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Close_diagnostic
 
         !if ( size(this%textual_diagnostics_hdf5(1:)) > 0 ) error_hdf5 = Static_hdf5_close(this%main_hdf5_diagnostics_file_id)
@@ -673,10 +681,10 @@ if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Apply()
         !call this%cr%Restart(ckpt_name)
 
         reem_total = omp_get_wtime()
-                        call this%Write_to_files()
+        call this%Write_to_files()
         ncyc = 1
         if (this%rezone_type == 0) then
-            max_ncyc = 21
+            max_ncyc = 41
         else
             max_ncyc = 201
         end if
@@ -687,7 +695,7 @@ if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Apply()
                 call this%time%Update_time()
                 call this%Write_to_files()
                 ncyc = ncyc + 1
-!                write(*,*)" DONE CYCLE!"
+            !                write(*,*)" DONE CYCLE!"
             !       call this%cr%Checkpoint(ckpt_name)
             end do
 
@@ -705,7 +713,9 @@ if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Apply()
 
 
         call this%Close_files()
-        write(71,*) "Total Time:", omp_get_wtime() - reem_total
+        if (this%parallel_params%my_rank == 0) then
+            write(71,*) "Total Time:", omp_get_wtime() - reem_total
+        end if
         write(*,*) "Total Time:", omp_get_wtime() - reem_total
         write(*,*) "ncyc: ", ncyc-1
     end subroutine Start_calculation
@@ -878,7 +888,7 @@ if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Apply()
 
 
         this%communication_parameters_material = communication_parameters_t(df%reduct_num_mat, this%nxp, this%nyp, this%nzp, num_neighbors, communicator,&
-            df%npx, df%npy, df%npz, coords, 1)
+            df%npx, df%npy, df%npz, coords, 0)
 
 
         allocate(this%parallel_params)

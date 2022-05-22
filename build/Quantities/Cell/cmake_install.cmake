@@ -1,4 +1,4 @@
-# Install script for directory: /home/reemh/eclipse-workspace_ronw/Backus/src/Quantities/Cell
+# Install script for directory: /home/reemh/eclipse-workspace/Backus_test/src/Quantities/Cell
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

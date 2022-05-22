@@ -41,7 +41,7 @@ def runner(df):
     N = int(numpy.ceil(np / 32.0))
 
     #execute_command = "mpirun -n {0} -mca btl self,sm,openib ../exec/main".format(np)
-    execute_command = "mpirun -n {0} /home/reemh/eclipse-workspace_ronw/Backus/src/exec/main".format(np)
+    execute_command = "mpirun -n {0} ../exec/main".format(np)
 
 #    sbatch_file.write(
 #        '#!/bin/bash\n'
@@ -62,7 +62,7 @@ def runner(df):
         + '#SBATCH -n {0} -N {1} --exclusive --threads-per-core={2} -p mixedp --error=slurm-%j.err --output=slurm-%j.out\n'.format(
             np, N, threads)
         + 'export OMP_NUM_THREADS={0}\n'.format(threads)
-        + 'module load intel/18.0.1.163 openmpi/4.0.4_intel mpi/impi-intel2018 cmake anaconda2\n'
+        + 'module load intel/18.0.1.163 openmpi/4.0.4_intel mpi/impi-intel2018 cmake anaconda2 ScientificLibraries/silo/4.11\n'
         + '{0}\n'.format(execute_command)
     )    
 

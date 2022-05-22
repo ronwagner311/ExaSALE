@@ -46,7 +46,7 @@ contains
      real(8) :: r8
      integer :: rank 
      call MPI_comm_rank(comm, rank, ierror) 
-      r8 = 0
+      r8 = 0d0
 
      Constructor_with_offset_and_diag%dim_offset = dim_offset
      Constructor_with_offset_and_diag%comm = comm

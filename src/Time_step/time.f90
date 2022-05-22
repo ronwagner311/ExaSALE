@@ -320,7 +320,6 @@ contains
          do j = 1, ny
             do i = 1, nx
 
-
                vel_diff_coor_diff_i = ((velocity_x(i+1, j, k) - velocity_x(i, j, k)) * (x(i+1, j, k) - x(i, j, k)) &
                                       +(velocity_y(i+1, j, k) - velocity_y(i, j, k)) * (y(i+1, j, k) - y(i, j, k)) &
                                       +(velocity_z(i+1, j, k) - velocity_z(i, j, k)) * (z(i+1, j, k) - z(i, j, k))) / &
@@ -355,6 +354,7 @@ contains
             end do
          end do
       end do
+
       if (vel_grad_max /= 0) this%dt_grad = this%dt_factor / vel_grad_max 
    end subroutine Calculate_vel_grad_dt_3d
 

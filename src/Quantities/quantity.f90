@@ -94,7 +94,8 @@ contains
 
         integer                  , intent(in)     :: axises_num
         integer                                   :: i
-
+        nullify(this%data_4d)
+        nullify(this%data)
         allocate (data_t :: this%data (axises_num))
         do i=1, axises_num
             this%data(i) = data_t (initial_data, d1, d2, d3)
@@ -119,7 +120,8 @@ contains
 
         integer           , intent(in)     :: axises_num
         integer                            :: i
-
+        nullify(this%data_4d)
+        nullify(this%data)
         allocate (data_t :: this%data (axises_num))
         do i=1, axises_num
             this%data(i) = data_t (initial_val, d1, d2, d3)
@@ -144,7 +146,8 @@ contains
 
         integer           , intent(in)     :: axises_num
         integer                            :: i
-
+        nullify(this%data_4d)
+        nullify(this%data)
         allocate (data_4d_t :: this%data_4d)
         this%data_4d = data_4d_t(initial_val, d1,d2,d3,d4)
         this%d1 = d1 - 1
@@ -166,7 +169,8 @@ contains
 
         integer           , intent(in)     :: axises_num
         integer                            :: i
-
+        nullify(this%data_4d)
+        nullify(this%data)
         allocate (data_4d_t :: this%data_4d)
         this%data_4d = data_4d_t(initial_val, d1,d2,d3,d4)
         this%d1 = d1 - 1
@@ -187,6 +191,7 @@ contains
         integer           , intent(in)     :: axises_num
         integer                            :: i
         nullify(this%data_4d)
+        nullify(this%data)
         allocate (data_t :: this%data (axises_num))
         do i=1, axises_num
             this%data(i) = data_t (d1, d2, d3)
@@ -296,6 +301,7 @@ contains
                 call this%data(i)%Exchange_virtual_space_blocking (tmp_ghost_width)
             end do
         else
+
             call this%data_4d%Exchange_virtual_space_blocking (tmp_ghost_width)
         end if
 

@@ -63,7 +63,9 @@ contains
         nxp = v_quantity%d1
         nyp = v_quantity%d2
         nzp = v_quantity%d3
-
+if (v_quantity%boundary_params%parallel_params%my_rank == 1) then
+write(72,*) wall_x_bot, wall_x_top, wall_y_bot, wall_y_top, wall_z_bot, wall_z_top
+end if
         if (wall_x_bot == .true.) then
             ii = 0
             do kk = 0, nzp + 1

@@ -1,4 +1,4 @@
-# Install script for directory: /home/reemh/eclipse-workspace_ronw/Backus/src/Material/Equation_of_state
+# Install script for directory: /home/reemh/eclipse-workspace/Backus_test/src/Material/Equation_of_state
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

@@ -80,7 +80,11 @@ contains
                                     ,   this%data, 0d0, 1)
 
 
-
+        if (is_blocking_local) then
+!            call this%Exchange_virtual_space_blocking()
+        else
+!            call this%Exchange_virtual_space_nonblocking()
+        end if
    end subroutine Apply_coordinates_boundary
 
    subroutine Calculate(this, dt, velocity, coords)

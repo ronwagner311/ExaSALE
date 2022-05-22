@@ -75,9 +75,7 @@ contains
         call Constructor_3d%Init_mesh_base(df, parallel_params)
         allocate(Constructor_3d%coordinates)
         Constructor_3d%coordinates = coordinates_t(0d0, nxp + 1, nyp + 1, nzp + 1,bc_v, bc_params)
-        xx_avg = data_t (nxp + 1, nyp + 1, nzp + 1)
-        yy_avg = data_t (nxp + 1, nyp + 1, nzp + 1)
-        zz_avg = data_t (nxp + 1, nyp + 1, nzp + 1)
+
 
 
         allocate (data_t :: Constructor_3d%avg_coordinates (3))
@@ -92,10 +90,9 @@ contains
         allocate (Constructor_3d%phi (nxp + 1, nyp + 1))
 
         allocate(Constructor_3d%start_layer_index_p,source= df%start_layer_index_p)
-        Constructor_3d%avg_coordinates(1) = xx_avg
-        Constructor_3d%avg_coordinates(2) = yy_avg
-        Constructor_3d%avg_coordinates(3) = zz_avg
-
+        Constructor_3d%avg_coordinates(1) = data_t(nxp + 1, nyp + 1, nzp + 1)
+        Constructor_3d%avg_coordinates(2) = data_t(nxp + 1, nyp + 1, nzp + 1)
+        Constructor_3d%avg_coordinates(3) = data_t (nxp + 1, nyp + 1, nzp + 1)
         Constructor_3d%dimension      = 3
 
         call Constructor_3d%Read_and_init_mesh_3d(df)
@@ -228,7 +225,6 @@ contains
                     end if
                     k1 = this%start_layer_index_r(n, 1) + (sw_is - 1)
                     k2 = this%start_layer_index_r(n + 1, 1) + (sw_is - 1)
-
                     k_start = k1
                     k_end = k2
                     if (k1 < tmp_start) then 
@@ -316,12 +312,13 @@ contains
                             write(*,*) "ERROR no zone type number: ", zone_type(n)
                     end select
 
-                    k = k1
+                    k = tmp
                     if (this%mesh_type == 2) then
                         do counter = k_start, k_end
                             this%coordinates%data(1)%values(i, j, k) = this%theta(i, j)
                             this%coordinates%data(2)%values(i, j, k) = this%phi(i, j)
                             this%coordinates%data(3)%values(i, j, k) = rr(counter)
+!if(this%parallel_params%my_rank == 1) write(*,*) i,j,k,counter,k1
                             k = k + 1
                         end do
                     else

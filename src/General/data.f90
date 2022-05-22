@@ -290,6 +290,7 @@ contains
       end if
       if (z+1 /= this%parallel_params%npz+1) then
          this%values(0:d1+1, 0:d2+1, d3+1) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2)-1), (/d1+2, d2+2/))
+
       end if
       if (z-1 /= 0) then
          this%values(0:d1+1, 0:d2+1, 0) = reshape(this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)-1), (/d1+2, d2+2/))
@@ -358,6 +359,10 @@ contains
       if (x-1 /= 0 .and. y-1 /= 0 .and. z-1 /= 0) then
          this%values(0, 0, 0) = this%recv_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)+4*(d3+2)+4*(d2+2)+4*(d1+2)+7)
       end if
+!
+!      if (this%parallel_params%my_rank == 0) then
+!      write(*,*)this%parallel_params%my_rank,this%values
+!end if
    end subroutine Get_recv_buf
 
 
@@ -395,6 +400,7 @@ contains
       end if
       if (z-1 /= 0) then
          this%send_buf(2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+(d1+2)*(d2+2) : 2*(d2+2)*(d3+2)+2*(d1+2)*(d3+2)+2*(d1+2)*(d2+2)-1) = reshape(this%values(0:d1+1, 0:d2+1, 1 + offset), (/d1+2 * d2+2/))
+
       end if
 
       if (x+1 /= this%parallel_params%npx+1 .and. y+1 /= this%parallel_params%npy+1) then
