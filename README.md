@@ -35,7 +35,25 @@ The src folder contains the source code files of Backus, here is a short documen
 
 
 ## Compile & Install
-This project is built via cmake. In order to create the makefiles, simply enter the src/Scripts directory and execute the clean.sh bash script. The script creates a folder named build that contains the .o and .a files. In addition, the execution file is located at src/exec/main. Once the makefiles are created, you can simple compile the project with the script make.sh that is located in the same folder as clean.sh (clean.sh automatically compiles after creating the make files). Please load the modules before compiling.
+This project is built via cmake. In order to create the makefiles and the executable you need to run the following commands from the Backus main directory:
+```
+mkdir build
+cd build
+cmake ../src
+make
+```
+Or alternatively, enter the directory `src/Scripts` using `cd` command and execute the following bash script:
+```
+./clean.sh
+```
+The script creates a folder named build that contains the .o and .a files. In addition, the execution file is located at the directory:
+```
+src/exec/main
+```
+Once the makefiles are created, you can simple compile the project with `./make.sh` bash script, located in `src/Scripts` directory.\
+\
+**Please load the modules before compiling**
+
 
 ## Execution
 To run the code simply execute the bash script ./run.sh located in src/Scripts. The script executes the mpirun command, so beware that if you change number of processes in the datafile, this line should be updated.
