@@ -13,7 +13,7 @@ This code was tested with:
 
 ## Folders Documentation
 
-The src folder contains the source code files of Backus, here is a short documentation of the subfolders in the src folder.
+The src folder contains the source code files of Backus, here is a short documentation of its subfolders.
 
 |Folder                    |Documentation                                                                   |
 |:---:                     |:---:                                                                           |
