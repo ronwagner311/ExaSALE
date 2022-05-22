@@ -96,7 +96,7 @@ contains
       type(communication_parameters_t) , pointer, intent(in out) :: comm_params
       integer :: ierr
 
-      if (this%is_parallel .eq. .true.) then
+      if (this%is_parallel .eqv. .true.) then
 
          call MPI_neighbor_alltoallw(send_buf, &
                                      comm_params%sizes_send, &
@@ -129,7 +129,7 @@ contains
 
 
 
-      if (this%is_parallel .eq. .true.) then
+      if (this%is_parallel .eqv. .true.) then
 
 
          call MPI_neighbor_alltoallw(send_buf, &
@@ -165,7 +165,7 @@ contains
       character (mpi_max_error_string) :: err_string
 
 
-      if (this%is_parallel .eq. .true.) then
+      if (this%is_parallel .eqv. .true.) then
 
          call MPI_Ineighbor_alltoallw(send_buf, &
                                      comm_params%sizes_recv, &
@@ -197,7 +197,7 @@ contains
       character (mpi_max_error_string) :: err_string
 
 
-      if (this%is_parallel .eq. .true.) then
+      if (this%is_parallel .eqv. .true.) then
 
          call MPI_wait(request, MPI_status_ignore, ierr)
 
@@ -214,7 +214,7 @@ contains
       integer :: rank, i, j  
 
 
-      if (this%is_parallel .eq. .true.) then
+      if (this%is_parallel .eqv. .true.) then
 
          call MPI_allreduce(send_val, recv_val, 1, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr)
       end if
@@ -229,7 +229,7 @@ contains
       integer :: rank, i, j  
 
 
-      if (this%is_parallel .eq. .true.) then
+      if (this%is_parallel .eqv. .true.) then
 
          call MPI_allreduce(send_val, recv_val, 1, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr)
       end if
@@ -245,7 +245,7 @@ contains
 
       integer :: rank, i, j  
 
-      if (this%is_parallel .eq. .true.) then
+      if (this%is_parallel .eqv. .true.) then
 
          call MPI_op_create(MPI_User_fn_array_by_min_val, .true., op_min_val, ierr) 
 
@@ -278,7 +278,7 @@ contains
 
       integer :: rank, i, j  
 
-      if (this%is_parallel .eq. .true.) then
+      if (this%is_parallel .eqv. .true.) then
 
          rank = Get_rank(MPI_COMM_WORLD)
 
@@ -312,7 +312,7 @@ contains
       integer :: ierr
       integer :: rank, i, j  
 
-      if (this%is_parallel .eq. .true.) then
+      if (this%is_parallel .eqv. .true.) then
 
          call MPI_allreduce(send_val, recv_val, 1, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
       end if

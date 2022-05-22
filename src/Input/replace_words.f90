@@ -35,12 +35,12 @@ contains
             tmp = zone // zones(i)
             root = tmp
             call json%info(trim(tmp), n_children=num_zones, found=found)
-            if (found == .false.) cycle
+            if (found .eqv. .false.) cycle
             do j = 1, num_zones
                 tmp = root
                 tmp = trim(tmp) // "(" // int2str(j) // ").type"
                 call json%get(trim(tmp) , value_str, found)
-                if (found == .false.) then
+                if (found .eqv. .false.) then
                     call error_msg("Error no type for zone or zone type without string")
                 end if
                 if (str_eqv(value_str, "constant")) then
@@ -115,13 +115,13 @@ contains
             tmp = segment // contours(i)
             root = tmp
             call json%info(trim(tmp), n_children=num_cntrs, found=found)
-            if (found == .false.) cycle
+            if (found .eqv. .false.) cycle
             do j = 1, num_cntrs
                 tmp = root
                 cntr_root = trim(root) // "(" // int2str(j) // ")"
                 tmp = trim(cntr_root) // ".contour_type"
                 call json%get(trim(tmp), value_str, found)
-                if (found == .true.) then
+                if (found .eqv. .true.) then
                     if (str_eqv(value_str, "line") .or. str_eqv(value_str, "kav")) then
                         call json%update(trim(tmp), 0, found)
                     elseif (str_eqv(value_str, "super") .or. str_eqv(value_str, "elipse")) then
@@ -152,7 +152,7 @@ contains
                 tmp = root
                 tmp = trim(tmp) // "(" // int2str(j) // ").units"
                 call json%get(trim(tmp), value_str, found)
-                if (found == .true.) then
+                if (found .eqv. .true.) then
                     select case(lower(value_str))
                         case ("regular")
                             call json%update(trim(tmp), 0, found)
@@ -190,7 +190,7 @@ contains
             tmp = root
             tmp = trim(tmp) // "(" // int2str(i) // ")"
             call json%get(trim(tmp) , material, found)
-            if (found == .false. .or. Str_eqv(material, "Vaccum")) cycle
+            if (found .eqv. .false. .or. Str_eqv(material, "Vaccum")) cycle
             call json%get("$"//trim(material) // ".eos_type",value_str, found)
 
             if (str_eqv(value_str, "0")) cycle

@@ -202,12 +202,12 @@ contains
                         k2 = k + k_tetr(t, 2)
                         k3 = k + k_tetr(t, 3)
 
-                        if ( not(i_virt(ii) == 0        .and. wall_x_bot == .true.) .or. &
-                             (i_virt(ii) == virt_nxp .and. wall_x_top == .true.) .or. &
-                             (j_virt(jj) == 0        .and. wall_y_bot == .true.) .or. &
-                             (j_virt(jj) == virt_nyp .and. wall_y_top == .true.) .or. &
-                             (k_virt(kk) == 0        .and. wall_z_bot == .true.) .or. &
-                             (k_virt(kk) == virt_nzp .and. wall_z_top == .true.)       ) then
+                        if ( .false. .eqv. ( (i_virt(ii) == 0        .and. wall_x_bot .eqv. .true.) .or. &
+                             (i_virt(ii) == virt_nxp .and. wall_x_top .eqv. .true.) .or. &
+                             (j_virt(jj) == 0        .and. wall_y_bot .eqv. .true.) .or. &
+                             (j_virt(jj) == virt_nyp .and. wall_y_top .eqv. .true.) .or. &
+                             (k_virt(kk) == 0        .and. wall_z_bot .eqv. .true.) .or. &
+                             (k_virt(kk) == virt_nzp .and. wall_z_top .eqv. .true.) )       ) then
                         	vertex_mass(i, j, k) = vertex_mass(i, j, k) + density(ii, jj, kk) * &
                             	                   Tetrahederon_volume(x(i  , j  , k  ), y(i  , j  , k  ), z(i  , j  , k  ), &
                             	                                       x(i1, j1, k1), y(i1, j1, k1), z(i1, j1, k1), &

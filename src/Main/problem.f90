@@ -37,7 +37,7 @@ module problem_module
     use mesh_module                     , only : mesh_t
     use time_module                     , only : time_t
     use textual_diagnostic_module       , only : textual_diagnostic_t
-    use silo_diagnostic_module       , only : silo_diagnostic_t
+!    use silo_diagnostic_module       , only : silo_diagnostic_t
     !    use diagnostic_module               , only : diagnostic_t, textual_diagnostic_t, plot_diagnostic_t!, silo_diagnostic_t, plot_diagnostic_t, &
     !        textual_diagnostic_hdf5_t, Static_hdf5_init, Static_hdf5_close
     use communication_parameters_module , only : communication_parameters_t
@@ -106,7 +106,7 @@ module problem_module
         !        type (eos_wrapper_t), dimension(:), allocatable         :: total_eos
         type (textual_diagnostic_t), dimension(:), allocatable  :: textual_diagnostics
         !        type (textual_diagnostic_hdf5_t), dimension(:), allocatable  :: textual_diagnostics_hdf5
-        type (silo_diagnostic_t), pointer                       :: silo_diagnostic
+!        type (silo_diagnostic_t), pointer                       :: silo_diagnostic
         !        type (plot_diagnostic_t), pointer                       :: plot_diagnostic
 
         type(boundary_parameters_t), pointer :: boundary_params
@@ -429,9 +429,9 @@ contains
             !                Constructor%plot_diagnostic = plot_diagnostic_t()
             !                call Constructor%plot_diagnostic%Init_diagnostic(Constructor%hydro, Constructor%time, 110 + i)
             else if (Str_eqv(word, 'silo') .eqv. .TRUE.) then
-                allocate(Constructor%silo_diagnostic)
-                Constructor%silo_diagnostic = silo_diagnostic_t()
-                call Constructor%silo_diagnostic%Init_diagnostic(Constructor%hydro,Constructor%time)
+                !allocate(Constructor%silo_diagnostic)
+!                Constructor%silo_diagnostic = silo_diagnostic_t()
+!                call Constructor%silo_diagnostic%Init_diagnostic(Constructor%hydro,Constructor%time)
             else if (Str_eqv(word, 'text') .eqv. .TRUE.) then
                 word = df%diag_names(i)
                 Constructor%textual_diagnostics(text_diag_counter) = textual_diagnostic_t(word, 110 + i, Constructor%parallel_params%my_rank)
@@ -635,7 +635,7 @@ contains
         !        end do
 
         !        if ( associated(this%plot_diagnostic) ) call this%plot_diagnostic%Close_diagnostic
-        if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Close_diagnostic
+!        if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Close_diagnostic
 
         !if ( size(this%textual_diagnostics_hdf5(1:)) > 0 ) error_hdf5 = Static_hdf5_close(this%main_hdf5_diagnostics_file_id)
 

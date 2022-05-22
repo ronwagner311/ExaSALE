@@ -193,7 +193,7 @@ contains
       this%communication_parameters => comm_params
 
       this%parallel_params => this%communication%parallel_params
-      if (this%communication%is_parallel == .true.) then
+      if (this%communication%is_parallel .eqv. .true.) then
          vals_shape = shape(this%values)
          d1 = vals_shape(1) - 2
          d2 = vals_shape(2) - 2
@@ -217,7 +217,7 @@ contains
       else
          ghost_width_local = 1   
       end if
-      if (this%communication%is_parallel == .true.) then
+      if (this%communication%is_parallel .eqv. .true.) then
          call this%Set_send_buf()
          call this%communication%Send_recv_neighbors_diag (this%communication_parameters, this%send_buf, this%recv_buf)
          call this%Get_recv_buf()
@@ -239,7 +239,7 @@ contains
       else
          ghost_width_local = 1   
       end if
-      if (this%communication%is_parallel == .true.) then
+      if (this%communication%is_parallel .eqv. .true.) then
          call this%Set_send_buf()
          call this%communication%Send_neighbors_diag (this%communication_parameters,&
                                                       this%send_buf, this%recv_buf, this%request)
@@ -251,7 +251,7 @@ contains
    subroutine Exchange_end (this)
       class (data_t), intent(in out) :: this  
 
-      if (this%communication%is_parallel == .true.) then
+      if (this%communication%is_parallel .eqv. .true.) then
          call this%communication%Wait_recv_neighbors_diag (this%communication_parameters,&
                                                            this%send_buf, this%recv_buf, this%request)
          call this%Get_recv_buf()

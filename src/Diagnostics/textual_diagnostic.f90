@@ -91,7 +91,7 @@ contains
         integer :: nx, ny, nz, nzp, nyp, nxp
         real(8), dimension(:,:,:), pointer    :: ptr_x, ptr_y, ptr_z
         integer :: i,j,k
-1001    format(I,2(1PE25.15))
+1001    format((I5),2(1PE25.15))
 1002    format(100000(1PE25.15))
 1003    format(100000(I2))
 

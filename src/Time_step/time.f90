@@ -12,8 +12,9 @@ module time_module
    private
 
    type, public         :: time_t
-      class(mesh_base_t), pointer :: mesh     
       private
+      class(mesh_base_t), pointer :: mesh     
+
       real(8), public        :: dt            
       real(8), public        :: dt_old        
       integer, public        :: current_cycle 
@@ -531,7 +532,7 @@ contains
                vel_diff_y = velocity_y(i, j, k) - mesh_velocity_y(i, j, k)
                vel_diff_z = velocity_z(i, j, k) - mesh_velocity_z(i, j, k)
 
-               if (i < nxp .or. is_wall_x_top == .false.) then    
+               if (i < nxp .or. is_wall_x_top .eqv. .false.) then
                   len_sq = (x(i+1, j, k) - x(i, j, k)) ** 2 &
                          + (y(i+1, j, k) - y(i, j, k)) ** 2 &
                          + (z(i+1, j, k) - z(i, j, k)) ** 2 + 1d-8
@@ -543,7 +544,7 @@ contains
                   vel_grad_i_p = eps
                end if
 
-               if (j < nyp .or. is_wall_y_top == .false.) then   
+               if (j < nyp .or. is_wall_y_top .eqv. .false.) then
                   len_sq = (x(i, j+1, k) - x(i, j, k)) ** 2 &
                          + (y(i, j+1, k) - y(i, j, k)) ** 2 &
                          + (z(i, j+1, k) - z(i, j, k)) ** 2 + 1d-8
@@ -555,7 +556,7 @@ contains
                   vel_grad_j_p = eps
                end if
 
-               if (k < nzp .or. is_wall_z_top == .false.) then   
+               if (k < nzp .or. is_wall_z_top .eqv. .false.) then
                   len_sq = (x(i, j, k+1) - x(i, j, k)) ** 2 &
                          + (y(i, j, k+1) - y(i, j, k)) ** 2 &
                          + (z(i, j, k+1) - z(i, j, k)) ** 2 + 1d-8
@@ -567,7 +568,7 @@ contains
                   vel_grad_k_p = eps
                end if
 
-               if (i > 1 .or. is_wall_x_bot == .false.) then   
+               if (i > 1 .or. is_wall_x_bot .eqv. .false.) then
                   len_sq = (x(i-1, j, k) - x(i, j, k)) ** 2 &
                          + (y(i-1, j, k) - y(i, j, k)) ** 2 &
                          + (z(i-1, j, k) - z(i, j, k)) ** 2 + 1d-8
@@ -579,7 +580,7 @@ contains
                   vel_grad_i_m = eps
                end if
 
-               if (j > 1 .or. is_wall_y_bot == .false.) then   
+               if (j > 1 .or. is_wall_y_bot .eqv. .false.) then
                   len_sq = (x(i, j-1, k) - x(i, j, k)) ** 2 &
                          + (y(i, j-1, k) - y(i, j, k)) ** 2 &
                          + (z(i, j-1, k) - z(i, j, k)) ** 2 + 1d-8
@@ -591,7 +592,7 @@ contains
                   vel_grad_j_m = eps
                end if
 
-               if (k > 1 .or. is_wall_z_bot == .false.) then   
+               if (k > 1 .or. is_wall_z_bot .eqv. .false.) then
                   len_sq = (x(i, j, k-1) - x(i, j, k)) ** 2 &
                          + (y(i, j, k-1) - y(i, j, k)) ** 2 &
                          + (z(i, j, k-1) - z(i, j, k)) ** 2 + 1d-8

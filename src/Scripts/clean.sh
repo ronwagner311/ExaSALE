@@ -12,17 +12,26 @@ module load anaconda2
 rm -rf ../../build
 mkdir ../../build
 cd ../../build
-if test "$1" = tests
-then 
-  echo "@@@@ TEST MODE @@@@"
-  FC=mpif90 DEFS="-DTEST" cmake ../src/
-elif test "$1" = debug
+
+if test "$1" = "GNU"
 then
-  echo "@@@@ DEBUG MODE @@@@"
-  FC=if90 DEFS="-DDEBUG" cmake ../src/
+  echo "@@@@ GNU @@@@"
+  FC=mpifort cmake ../src/
 else
-  FC=mpiifort cmake ../src/
+  echo "@@@@ INTEL @@@@"
+  FC=mpiifort cmake ../src 
 fi
+#if test "$1" = tests
+#then 
+#  echo "@@@@ TEST MODE @@@@"
+#  FC=mpif90 DEFS="-DTEST" cmake ../src/
+#elif test "$1" = debug
+#then
+#  echo "@@@@ DEBUG MODE @@@@"
+#  FC=if90 DEFS="-DDEBUG" cmake ../src/
+#else
+ # FC=mpiifort cmake ../src/
+#fi
 make
 cd ../src/Scripts
 rm core* 2>/dev/null

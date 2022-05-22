@@ -115,7 +115,7 @@ contains
         integer :: i,j,k, nx, ny, nz
         nx = this%d1
         ny = this%d2
-        if (this%update_visc_factor == .false.) return
+        if (this%update_visc_factor .eqv. .false.) return
         if (.not. present(total_rho)) then
             do k = this%start_no_xl_visc, this%end_no_xl_visc
                 do j = 1, ny
@@ -173,7 +173,7 @@ contains
                 this%from_radial_index_sphere = 1
         end select
 
-        if (no_xl_flag == .false.) then
+        if (no_xl_flag .eqv. .false.) then
             this%no_xl_visc_flag = .false.
             this%start_no_xl_visc = 0
             this%end_no_xl_visc = 0
@@ -211,7 +211,7 @@ contains
         end if
 
         this%update_visc_factor = .false.
-        if (this%no_xl_visc_flag == .true.) then
+        if (this%no_xl_visc_flag .eqv. .true.) then
             this%update_visc_factor = .true.
         end if
 

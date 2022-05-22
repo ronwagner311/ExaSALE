@@ -2402,7 +2402,7 @@ contains
         j_end = this%nyp
         k_end = this%nzp
 
-        if (this%parallel_params%is_parallel == .true.) then
+        if (this%parallel_params%is_parallel .eqv. .true.) then
             virt_i_1 = this%parallel_params%i_virt(1)
             virt_i_nxp = this%parallel_params%i_virt(this%nxp)
 
@@ -2412,12 +2412,12 @@ contains
             virt_k_1 = this%parallel_params%k_virt(1)
             virt_k_nzp = this%parallel_params%k_virt(this%nzp)
 
-            if (virt_i_1 /= 1 .or. wall_x_bot == .false.) i_start = 1
-            if (virt_j_1 /= 1 .or. wall_y_bot == .false.) j_start = 1
-            if (virt_k_1 /= 1 .or. wall_z_bot == .false.) k_start = 1
-            if (virt_i_nxp /= virt_nxp .or. wall_x_top == .false.) i_end = i_end - 1
-            if (virt_j_nyp /= virt_nyp .or. wall_y_top == .false.) j_end = j_end - 1
-            if (virt_k_nzp /= virt_nzp .or. wall_z_top == .false.) k_end = k_end - 1
+            if (virt_i_1 /= 1 .or. wall_x_bot .eqv. .false.) i_start = 1
+            if (virt_j_1 /= 1 .or. wall_y_bot .eqv. .false.) j_start = 1
+            if (virt_k_1 /= 1 .or. wall_z_bot .eqv. .false.) k_start = 1
+            if (virt_i_nxp /= virt_nxp .or. wall_x_top .eqv. .false.) i_end = i_end - 1
+            if (virt_j_nyp /= virt_nyp .or. wall_y_top .eqv. .false.) j_end = j_end - 1
+            if (virt_k_nzp /= virt_nzp .or. wall_z_top .eqv. .false.) k_end = k_end - 1
         end if
 
 
@@ -2951,32 +2951,32 @@ contains
                     j_tet3 = j + j_3_add(tet_counter)
                     k_tet3 = k + k_3_add(tet_counter)
 
-                    if (wall_x_top == .true.) then
+                    if (wall_x_top .eqv. .true.) then
                         if (i_tet1 > this%nxp) i_tet1 = this%nx
                         if (i_tet2 > this%nxp) i_tet2 = this%nx
                         if (i_tet3 > this%nxp) i_tet3 = this%nx
                     end if
-                    if (wall_x_bot == .true.) then
+                    if (wall_x_bot .eqv. .true.) then
                         if (i_tet1 < 1) i_tet1 = 2
                         if (i_tet2 < 1) i_tet2 = 2
                         if (i_tet3 < 1) i_tet3 = 2
                     end if
-                    if (wall_y_top == .true.) then
+                    if (wall_y_top .eqv. .true.) then
                         if (j_tet1 > this%nyp) j_tet1 = this%ny
                         if (j_tet2 > this%nyp) j_tet2 = this%ny
                         if (j_tet3 > this%nyp) j_tet3 = this%ny
                     end if
-                    if (wall_y_bot == .true.) then
+                    if (wall_y_bot .eqv. .true.) then
                         if (j_tet1 < 1) j_tet1 = 2
                         if (j_tet2 < 1) j_tet2 = 2
                         if (j_tet3 < 1) j_tet3 = 2
                     end if
-                    if (wall_z_top == .true.) then
+                    if (wall_z_top .eqv. .true.) then
                         if (k_tet1 > this%nzp) k_tet1 = this%nz
                         if (k_tet2 > this%nzp) k_tet2 = this%nz
                         if (k_tet3 > this%nzp) k_tet3 = this%nz
                     end if
-                    if (wall_z_bot == .true.) then
+                    if (wall_z_bot .eqv. .true.) then
                         if (k_tet1 < 1) k_tet1 = 2
                         if (k_tet2 < 1) k_tet2 = 2
                         if (k_tet3 < 1) k_tet3 = 2
@@ -3217,12 +3217,12 @@ contains
                         volijk = Hexahedron_volume(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, &
                             x5, y5, z5, x6, y6, z6, x7, y7, z7, x8, y8, z8)
 
-                        if (ip > this%nx .and. wall_x_top == .true.) ip = this%nx
-                        if (im < 1       .and. wall_x_bot == .true.) im = 1
-                        if (jp > this%ny .and. wall_y_top == .true.) jp = this%ny
-                        if (jm < 1       .and. wall_y_bot == .true.) jm = 1
-                        if (kp > this%nz .and. wall_z_top == .true.) kp = this%nz
-                        if (km < 1       .and. wall_z_bot == .true.) km = 1
+                        if (ip > this%nx .and. wall_x_top .eqv. .true.) ip = this%nx
+                        if (im < 1       .and. wall_x_bot .eqv. .true.) im = 1
+                        if (jp > this%ny .and. wall_y_top .eqv. .true.) jp = this%ny
+                        if (jm < 1       .and. wall_y_bot .eqv. .true.) jm = 1
+                        if (kp > this%nz .and. wall_z_top .eqv. .true.) kp = this%nz
+                        if (km < 1       .and. wall_z_bot .eqv. .true.) km = 1
 
                         if (nm == 0) then
                             vijk    =  (vof(i ,  j, k)   + vof(im, j, k)   + vof(i, j, km)+ &

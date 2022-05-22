@@ -193,12 +193,12 @@ contains
             tmp = root
             path_to_diagnostic = trim(tmp) // "(" // int2str(i) // ").diagnostic"
             call json%info(trim(path_to_diagnostic), n_children=num_diags, found=found)
-            if (found == .false. ) cycle
+            if (found .eqv. .false. ) cycle
 
             do j = 1, num_diags
                 tmp = trim(path_to_diagnostic) // "(" // int2str(j) // ").variables"
                 call json%info(trim(tmp), n_children=num_variables, found=found)
-                if (found == .false.) total_files = total_files + 1
+                if (found .eqv. .false.) total_files = total_files + 1
                 total_files = total_files + num_variables
             end do
         end do
@@ -211,7 +211,7 @@ contains
             tmp = root
             path_to_diagnostic = trim(tmp) // "(" // int2str(i) // ").diagnostic"
             call json%info(trim(path_to_diagnostic), n_children=num_diags, found=found)
-            if (found == .false. ) cycle
+            if (found .eqv. .false. ) cycle
             do j = 1, num_diags
                 tmp = trim(path_to_diagnostic) // "(" // int2str(j) // ").type"
                 call json%get(trim(tmp), diag_type, found)
@@ -227,7 +227,7 @@ contains
                             tmp = trim(root) // ".variables(" // int2str(k) // ")"
 
                             call json%get(trim(tmp), diag, found)
-                            if (found == .false.) call warn_msg("Warning no variable found in text or hdf5 segment")
+                            if (found .eqv. .false.) call warn_msg("Warning no variable found in text or hdf5 segment")
 
                             this%diag_types     (diag_counter) = "text"
                             this%diag_names     (diag_counter) = lower(diag) // ".txt"
@@ -240,7 +240,7 @@ contains
                             this%num_diag_hdf5 = this%num_diag_hdf5 + 1
                             tmp = trim(root) // ".variables(" // int2str(k) // ")"
                             call json%get(trim(tmp), diag, found)
-                            if (found == .false.) call warn_msg("Warning no variable found in text or hdf5 segment")
+                            if (found .eqv. .false.) call warn_msg("Warning no variable found in text or hdf5 segment")
                             this%diag_types     (diag_counter) = "hdf5"
                             this%diag_names     (diag_counter) = lower(diag)
                             this%diag_variables (diag_counter) = lower(diag)
@@ -275,27 +275,27 @@ contains
 
         tmp = segment // ".np"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in parallel segment")
+        if (found .eqv. .false.) call error_msg("Bad value in parallel segment")
         this%np = var
 
         tmp = segment // ".npx"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in parallel segment")
+        if (found .eqv. .false.) call error_msg("Bad value in parallel segment")
         this%npx = var
 
         tmp = segment // ".npy"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in parallel segment")
+        if (found .eqv. .false.) call error_msg("Bad value in parallel segment")
         this%npy = var
 
         tmp = segment // ".npz"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in parallel segment")
+        if (found .eqv. .false.) call error_msg("Bad value in parallel segment")
         this%npz = var
 
         tmp = segment // ".threads"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in parallel segment")
+        if (found .eqv. .false.) call error_msg("Bad value in parallel segment")
         this%threads = var
     end subroutine Parse_parallel
 
@@ -313,7 +313,7 @@ contains
 
         tmp = segment // ".name"
         call json%get(trim(tmp), parallel_param, found)
-        if (found == .false.) call error_msg("Bad value in data segment")
+        if (found .eqv. .false.) call error_msg("Bad value in data segment")
         this%name = parallel_param
 
     end subroutine Parse_data
@@ -331,27 +331,27 @@ contains
 
         tmp = segment // ".sw_nraz"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in switch segment")
+        if (found .eqv. .false.) call error_msg("Bad value in switch segment")
         this%sw_nraz = var
 
         tmp = segment // ".sw_symmetry"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in switch segment")
+        if (found .eqv. .false.) call error_msg("Bad value in switch segment")
         this%sw_symmetry = var
 
         tmp = segment // ".sw_vert_mass"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in switch segment")
+        if (found .eqv. .false.) call error_msg("Bad value in switch segment")
         this%sw_vert_mass = var
 
         tmp = segment // ".sw_wilkins"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in switch segment")
+        if (found .eqv. .false.) call error_msg("Bad value in switch segment")
         this%sw_wilkins = var
 
         tmp = segment // ".sw_cr"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in switch segment")
+        if (found .eqv. .false.) call error_msg("Bad value in switch segment")
         this%with_cr = var
 
     end subroutine Parse_switches
@@ -370,101 +370,101 @@ contains
 
         tmp = segment // ".time_final"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%finish_time = var
 
         tmp = segment // ".dt_max"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%dt_max = var
 
         tmp = segment // ".cyl"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%cyl = var
 
         tmp = segment // ".init_temperature"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%init_temperature = var
 
         tmp = segment // ".dt_factor"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%dt_factor = var
 
         tmp = segment // ".dt0"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%dt0 = var
 
         tmp = segment // ".time_final"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%finish_time = var
 
         tmp = segment // ".dt_cour_fac"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%dt_cour_fac = var
 
         tmp = segment // ".quad_visc_fac"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%quad_visc_fac = var
 
         tmp = segment // ".linear_visc_fac"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%linear_visc_fac = var
 
         tmp = segment // ".emf"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%emf = var
 
         tmp = segment // ".emfm"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%emfm = var
 
         tmp = segment // ".i_sphere"
         call json%get(trim(tmp), var_i, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%to_radial_index_sphere = var_i
 
         tmp = segment // ".i_sphere_up"
         call json%get(trim(tmp), var_i, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%from_radial_index_sphere = var_i
 
         tmp = segment // ".no_move_layer"
         call json%get(trim(tmp), var_i, found)
-        if (found == .false.) call error_msg("Bad value in simulation_parameters segment")
+        if (found .eqv. .false.) call error_msg("Bad value in simulation_parameters segment")
         this%no_move_layer = var_i
 
 
         tmp = segment // ".no_linear_visc.flag"
         call json%get(trim(tmp), var_l, found)
-        if (found == .false.) then
+        if (found .eqv. .false.) then
             call warn_msg("No flag found in NO_XL_VISC, we assume you do want it and act as it is true")
             var_l = .true.
         end if
         this%no_xl_flag = var_l
-        if (var_l == .true.) then
+        if (var_l .eqv. .true.) then
             tmp = segment // ".no_linear_visc.start_layer"
             call json%get(trim(tmp), var_i, found)
-            if (found == .false.) call error_msg("Parser: Bad value in simulation parameter no_xl_visc")
+            if (found .eqv. .false.) call error_msg("Parser: Bad value in simulation parameter no_xl_visc")
             this%start_no_xl_visc = var_i
 
             tmp = segment // ".no_linear_visc.end_layer"
             call json%get(trim(tmp), var_i, found)
-            if (found == .false.) call error_msg("Parser: Bad value in simulation parameter no_xl_visc")
+            if (found .eqv. .false.) call error_msg("Parser: Bad value in simulation parameter no_xl_visc")
             this%end_no_xl_visc = var_i
 
             tmp = segment // ".no_linear_visc.offset"
             call json%get(trim(tmp), var_i, found)
-            if (found == .false.) call error_msg("Parser: Bad value in simulation parameter no_xl_visc")
+            if (found .eqv. .false.) call error_msg("Parser: Bad value in simulation parameter no_xl_visc")
             this%offset_no_xl_visc = var_i
         end if
 
@@ -483,22 +483,22 @@ contains
 
         tmp = segment // ".shorter_advect"
         call json%get(trim(tmp), var_l, found)
-        if (found == .false.) call error_msg("Bad value in rezone_advect segment")
+        if (found .eqv. .false.) call error_msg("Bad value in rezone_advect segment")
         this%shorter_advect = var_l
 
         tmp = segment // ".fix_overflow"
         call json%get(trim(tmp), var_l, found)
-        if (found == .false.) call error_msg("Bad value in rezone_advect segment")
+        if (found .eqv. .false.) call error_msg("Bad value in rezone_advect segment")
         this%fix_overflow = var_l
 
         tmp = segment // ".line_calc"
         call json%get(trim(tmp), var_l, found)
-        if (found == .false.) call error_msg("Bad value in rezone_advect segment")
+        if (found .eqv. .false.) call error_msg("Bad value in rezone_advect segment")
         this%line_calc = var_l
 
         tmp = segment // ".rezone_type"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in rezone_advect segment")
+        if (found .eqv. .false.) call error_msg("Bad value in rezone_advect segment")
         this%rezone_type = var
 
     end subroutine Parse_rezone_advect
@@ -516,7 +516,7 @@ contains
 
         tmp = segment // ".mesh_type"
         call json%get(trim(tmp), var, found)
-        if (found == .false.) call error_msg("Bad value in mesh segment")
+        if (found .eqv. .false.) call error_msg("Bad value in mesh segment")
         this%mesh_type = var
 
 
@@ -547,13 +547,13 @@ contains
 
         root = segment // layers(1)
         call json%info(trim(root), n_children=num_cells, found=found)
-        if (found == .false.)  call error_msg("Parser: Problem in layers material datafile")
+        if (found .eqv. .false.)  call error_msg("Parser: Problem in layers material datafile")
         this%number_layers_i = num_cells
         allocate(this%number_cells_i(num_cells))
         do i = 1, num_cells
             tmp = trim(root) // "(" // int2str(i) // ")"
             call json%get(trim(tmp), var_i, found)
-            if (found == .false.) call error_msg("Parser: Bad value in layers datafile")
+            if (found .eqv. .false.) call error_msg("Parser: Bad value in layers datafile")
             this%number_cells_i(i) = var_i
         end do
         this%virt_nx = sum(this%number_cells_i)
@@ -563,13 +563,13 @@ contains
 
         root = segment // layers(2)
         call json%info(trim(root), n_children=num_cells, found=found)
-        if (found == .false.)   call error_msg("Parser: Problem in layers material datafile")
+        if (found .eqv. .false.)   call error_msg("Parser: Problem in layers material datafile")
         this%number_layers_j = num_cells
         allocate(this%number_cells_j(num_cells))
         do i = 1, num_cells
             tmp = trim(root) // "(" // int2str(i) // ")"
             call json%get(trim(tmp), var_i, found)
-            if (found == .false.) call error_msg("Parser: Bad value in layers datafile")
+            if (found .eqv. .false.) call error_msg("Parser: Bad value in layers datafile")
             this%number_cells_j(i) = var_i
         end do
         this%virt_ny = sum(this%number_cells_j)
@@ -579,7 +579,7 @@ contains
 
         root = segment // layers(3)
         call json%info(trim(root), n_children=num_cells, found=found)
-        if (found == .false.) then
+        if (found .eqv. .false.) then
             this%dimension = 2
             allocate(this%number_cells_k(1))
             this%number_cells_k(1) = 1
@@ -593,7 +593,7 @@ contains
             do i = 1, num_cells
                 tmp = trim(root) // "(" // int2str(i) // ")"
                 call json%get(trim(tmp), var_i, found)
-                if (found == .false.)  call error_msg("Bad value in layers datafile")
+                if (found .eqv. .false.)  call error_msg("Bad value in layers datafile")
                 this%number_cells_k(i) = var_i
             end do
             this%virt_nz  = this%virt_nx
@@ -621,7 +621,7 @@ contains
 
         root = segment // ".materials"
         call json%info(trim(root), n_children=num_mats, found=found)
-        if (found == .false.) call error_msg("Problem in material datafile")
+        if (found .eqv. .false.) call error_msg("Problem in material datafile")
         allocate(witness_array(num_mats))
         witness_array = ""
 
@@ -657,10 +657,10 @@ contains
 
             end do
 
-            if (already_added == .false.) then
+            if (already_added .eqv. .false.) then
                 this%mat_index(i) = mat_ind
                 witness_array(i) = trim(material_name)
-                if (Str_eqv(trim(material_name), "Vaccum") == .false.) then
+                if (Str_eqv(trim(material_name), "Vaccum") .eqv. .false.) then
                     mat_ind = mat_ind + 1
                     this%reduct_num_mat = this%reduct_num_mat + 1
                     last_index = mat_ind
@@ -671,7 +671,7 @@ contains
                 mat_ind = last_index
             end if
 
-            if (Str_eqv(trim(material_name), "Vaccum") == .true.) then
+            if (Str_eqv(trim(material_name), "Vaccum") .eqv. .true.) then
                 this%mat_index(i) = 0
                 cycle
             end if
@@ -679,37 +679,37 @@ contains
 
             tmp = trim(mat_segment) // ".eos_type"
             call json%get(trim(tmp), var_i, found)
-            if (found == .false.) call error_msg("Parse Bad value for material")
+            if (found .eqv. .false.) call error_msg("Parse Bad value for material")
             this%mat_eos(this%mat_index(i)) = var_i
 
             tmp = trim(mat_segment) // ".A"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Parse Bad value for material")
+            if (found .eqv. .false.) call error_msg("Parse Bad value for material")
             this%mat_atomic_mass(this%mat_index(i)) = var_r
 
             tmp = trim(mat_segment) // ".Z"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Parse Bad value for material")
+            if (found .eqv. .false.) call error_msg("Parse Bad value for material")
             this%mat_z(this%mat_index(i)) = var_r
 
             tmp = trim(mat_segment) // ".Z_2"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Parse Bad value for material")
+            if (found .eqv. .false.) call error_msg("Parse Bad value for material")
             this%mat_z2(this%mat_index(i)) = var_r
 
             tmp = trim(mat_segment) // ".rho_0"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Parse Bad value for material")
+            if (found .eqv. .false.) call error_msg("Parse Bad value for material")
             this%mat_rho_0(this%mat_index(i)) = var_r
 
             tmp = trim(mat_segment) // ".sie_0"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Parse Bad value for material")
+            if (found .eqv. .false.) call error_msg("Parse Bad value for material")
             this%mat_sie_0(this%mat_index(i)) = var_r
 
             tmp = trim(mat_segment) // ".gamma_gas"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Parse Bad value for material")
+            if (found .eqv. .false.) call error_msg("Parse Bad value for material")
             this%mat_gamma_gas(this%mat_index(i)) = var_r
 
         end do
@@ -734,86 +734,86 @@ contains
 
         root = segment // contours(1)
         call json%info(trim(root), n_children=num_cntrs, found=found)
-        if (found == .false.) call error_msg("Problem in contours datafile")
+        if (found .eqv. .false.) call error_msg("Problem in contours datafile")
         allocate(this%contour_i_type(num_cntrs))
         allocate(this%contour_i_line(num_cntrs, 11))
         do i = 1, num_cntrs
             cntr_root = trim(root) // "(" // int2str(i) // ")"
             tmp = trim(cntr_root) // ".contour_type"
             call json%get(trim(tmp),cntr_type, found)
-            if (found == .false.) call error_msg("Error in countour in datafile")
+            if (found .eqv. .false.) call error_msg("Error in countour in datafile")
             this%contour_i_type(i) = cntr_type
             select case(cntr_type)
                 case (0) 
                     tmp = trim(cntr_root) // ".y1"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 1) = var_r
 
                     tmp = trim(cntr_root) // ".x1"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 2) = var_r
 
                     tmp = trim(cntr_root) // ".y2"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 3) = var_r
 
                     tmp = trim(cntr_root) // ".x2"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 4) = var_r
 
                 case(1)  
                     tmp = trim(cntr_root) // ".y1"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 1) = var_r
 
                     tmp = trim(cntr_root) // ".x1"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 2) = var_r
 
                     tmp = trim(cntr_root) // ".y2"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 3) = var_r
 
                     tmp = trim(cntr_root) // ".x2"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 4) = var_r
 
                     tmp = trim(cntr_root) // ".a"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 5) = var_r
 
                     tmp = trim(cntr_root) // ".b"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 6) = var_r
 
                     tmp = trim(cntr_root) // ".c"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 7) = var_r
 
                     tmp = trim(cntr_root) // ".d"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 8) = var_r
 
                      tmp = trim(cntr_root) // ".e"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 9) = var_r
 
                     tmp = trim(cntr_root) // ".f"
                     call json%get(trim(tmp), var_r, found)
-                    if (found == .false.) call error_msg("Error in contour i in datafile")
+                    if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 10) = var_r
                 case default
                     call error_msg("Unrecognized contour type")
@@ -822,27 +822,27 @@ contains
 
         root = segment // contours(2)
         call json%info(trim(root), n_children=num_cntrs, found=found)
-        if (found == .false.) call error_msg("Problem in contours datafile")
+        if (found .eqv. .false.) call error_msg("Problem in contours datafile")
         allocate(this%contour_j_type(num_cntrs))
         allocate(this%theta0(num_cntrs, 1))
         do i = 1, num_cntrs
             cntr_root = trim(root) // "(" // int2str(i) // ")"
             tmp = trim(cntr_root) // ".units"
             call json%get(trim(tmp), cntr_type, found)
-            if (found == .false.) call error_msg("Error in countour j in datafile")
+            if (found .eqv. .false.) call error_msg("Error in countour j in datafile")
             this%contour_j_type = cntr_type
 
             tmp = trim(cntr_root) // ".theta0"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Error in countour j in datafile")
+            if (found .eqv. .false.) call error_msg("Error in countour j in datafile")
             this%theta0(i, 1) = var_r
         end do
 
         root = segment // contours(3)
         call json%info(trim(root), n_children=num_cntrs, found=found)
-        if (found == .true. .and. this%dimension == 2) call error_msg("Problem should be 3d, but it appears to have no contour k")
+        if (found .eqv. .true. .and. this%dimension == 2) call error_msg("Problem should be 3d, but it appears to have no contour k")
 
-        if (found == .false.) return
+        if (found .eqv. .false.) return
 
         allocate(this%contour_k_type(num_cntrs))
         allocate(this%phi0(num_cntrs, 1))
@@ -850,12 +850,12 @@ contains
             cntr_root = trim(root) // "(" // int2str(i) // ")"
             tmp = trim(cntr_root) // ".units"
             call json%get(trim(tmp), cntr_type, found)
-            if (found == .false.) call error_msg("Error in countour in datafile")
+            if (found .eqv. .false.) call error_msg("Error in countour in datafile")
             this%contour_j_type = cntr_type
 
             tmp = trim(cntr_root) // ".phi0"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Error in countour in datafile")
+            if (found .eqv. .false.) call error_msg("Error in countour in datafile")
             this%phi0(i, 1) = var_r
         end do
     end subroutine Parse_contours
@@ -876,7 +876,7 @@ contains
 
         root = segment // zones(1)
         call json%info(trim(root), n_children=num_zones, found=found)
-        if (found == .false.) call error_msg("Problem in zones datafile")
+        if (found .eqv. .false.) call error_msg("Problem in zones datafile")
         allocate(this%zone_i_type(num_zones))
         allocate(this%zone_i_d(num_zones))
 
@@ -884,18 +884,18 @@ contains
             zone_root = trim(root) // "(" // int2str(i) // ")"
             tmp = trim(zone_root) // ".type"
             call json%get(trim(tmp), zone_type, found)
-            if (found == .false.) call error_msg("Error in zones in datafile")
+            if (found .eqv. .false.) call error_msg("Error in zones in datafile")
             this%zone_i_type(i) = zone_type
 
             tmp = trim(zone_root) // ".dr"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Error in zones in datafile")
+            if (found .eqv. .false.) call error_msg("Error in zones in datafile")
             this%zone_i_d(i) = var_r
         end do
 
         root = segment // zones(2)
         call json%info(trim(root), n_children=num_zones, found=found)
-        if (found == .false.) call error_msg("Problem in zones datafile")
+        if (found .eqv. .false.) call error_msg("Problem in zones datafile")
         allocate(this%zone_j_type(num_zones))
         allocate(this%zone_j_d(num_zones))
 
@@ -903,18 +903,18 @@ contains
             zone_root = trim(root) // "(" // int2str(i) // ")"
             tmp = trim(zone_root) // ".type"
             call json%get(trim(tmp), zone_type, found)
-            if (found == .false.) call error_msg("Error in zones in datafile")
+            if (found .eqv. .false.) call error_msg("Error in zones in datafile")
             this%zone_j_type(i) = zone_type
 
             tmp = trim(zone_root) // ".d_theta"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Error in zones in datafile")
+            if (found .eqv. .false.) call error_msg("Error in zones in datafile")
             this%zone_j_d(i) = var_r
         end do
 
         root = segment // zones(3)
         call json%info(trim(root), n_children=num_zones, found=found)
-        if (found == .false.) return
+        if (found .eqv. .false.) return
         allocate(this%zone_k_type(num_zones))
         allocate(this%zone_k_d(num_zones))
 
@@ -922,12 +922,12 @@ contains
             zone_root = trim(root) // "(" // int2str(i) // ")"
             tmp = trim(zone_root) // ".type"
             call json%get(trim(tmp), zone_type, found)
-            if (found == .false.) call error_msg("Error in zones in datafile")
+            if (found .eqv. .false.) call error_msg("Error in zones in datafile")
             this%zone_k_type(i) = zone_type
 
             tmp = trim(zone_root) // ".d_phi"
             call json%get(trim(tmp), var_r, found)
-            if (found == .false.) call error_msg("Error in zones in datafile")
+            if (found .eqv. .false.) call error_msg("Error in zones in datafile")
             this%zone_k_d(i) = var_r
         end do
 

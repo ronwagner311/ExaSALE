@@ -536,7 +536,7 @@ contains
         real(8), dimension(:, :, :), pointer :: y            
         real(8), dimension(:, :, :), pointer :: z            
 
-        if (this%no_move_flag == .false.) return
+        if (this%no_move_flag .eqv. .false.) return
 
         call this  %Point_to_data(velocity_x, velocity_y, velocity_z)
         call coords%Point_to_data(x, y, z)
@@ -559,7 +559,7 @@ contains
         if (radial_vel < -1d-10) then
             this%no_move_flag = .false.
         end if
-        if (this%no_move_flag == .false.) return
+        if (this%no_move_flag .eqv. .false.) return
 
         do j = 1, nyp
             do i = 1, nxp

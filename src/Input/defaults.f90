@@ -37,20 +37,20 @@ contains
 
         tmp = segment
         call json%info(trim(tmp), found=found)
-        if (found == .false.) then
+        if (found .eqv. .false.) then
             call json_creator%create_object(inp, 'switches')
             call json%add("$switches", inp)
         end if
 
         tmp = segment // ".sw_wilkins"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) then
+        if (found .eqv. .false.) then
             call json%add(trim(tmp), 1, found=found)
         end if
 
         tmp = segment // ".sw_cr"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), 0, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), 0, found=found)
 
         return
     end subroutine Default_switches
@@ -73,7 +73,7 @@ contains
 
         tmp = segment
         call json%info(trim(tmp), found=found)
-        if (found == .false.) then
+        if (found .eqv. .false.) then
             call json_creator%create_object(inp, segment)
             call json%add("$simulation_parameters", inp)
         end if
@@ -81,60 +81,60 @@ contains
         tmp = segment // ".time_final"
         val = 30e-6
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), val, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), val, found=found)
 
         tmp = segment // ".dt0"
         val = 1e-14
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), Str2dble("1e-14"), found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), Str2dble("1e-14"), found=found)
 
         tmp = segment // ".dt"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), Str2dble("1e-14"), found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), Str2dble("1e-14"), found=found)
 
         tmp = segment // ".dt_factor"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), Str2dble("1e-1"), found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), Str2dble("1e-1"), found=found)
 
         tmp = segment // ".emf"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), Str2dble("1e-5"), found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), Str2dble("1e-5"), found=found)
 
         tmp = segment // ".cyl"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), 1, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), 1, found=found)
 
         tmp = segment // ".emfm"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), Str2dble("1e-20"), found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), Str2dble("1e-20"), found=found)
 
         tmp = segment // ".linear_visc_fac"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), Str2dble("0.15"), found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), Str2dble("0.15"), found=found)
 
         tmp = segment // ".quad_visc_fac"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), Str2dble("4.0"), found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), Str2dble("4.0"), found=found)
 
         tmp = segment // ".dt_cour_fac"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), Str2dble("3.0"), found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), Str2dble("3.0"), found=found)
 
         tmp = segment // ".i_sphere"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), -1, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), -1, found=found)
 
         tmp = segment // ".i_sphere_up"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), -1, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), -1, found=found)
 
         tmp = segment // ".no_move_layer"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), -1, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), -1, found=found)
 
         tmp = segment // ".no_linear_visc"
         call json%info(trim(tmp), found)
-        if (found == .false.) then
+        if (found .eqv. .false.) then
             call json_creator%create_object(inp, segment)
             call json%add("$" // trim(tmp), inp)
             call json%add(trim(tmp) // ".flag"       , .false., found=found)
@@ -145,7 +145,7 @@ contains
 
         tmp = segment // ".min_pressure_shock"
         call json%info(trim(tmp), found)
-        if (found == .false.) call json%add(trim(tmp), Str2dble("1e9"), found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), Str2dble("1e9"), found=found)
 
         return
     end subroutine Default_simulation_parameters
@@ -166,30 +166,30 @@ contains
 
         tmp = segment
         call json%info(trim(tmp), found=found)
-        if (found == .false.) then
+        if (found .eqv. .false.) then
             call json_creator%create_object(inp, segment)
             call json%add("$parallel", inp)
         end if
 
         tmp = segment // ".np"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), 1, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), 1, found=found)
 
         tmp = segment // ".npx"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), 1, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), 1, found=found)
 
         tmp = segment // ".npy"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), 1, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), 1, found=found)
 
         tmp = segment // ".npz"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), 1, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), 1, found=found)
 
         tmp = segment // ".threads"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), 1, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), 1, found=found)
 
         return
     end subroutine Default_parallel
@@ -209,26 +209,26 @@ contains
 
         tmp = segment
         call json%info(trim(tmp), found=found)
-        if (found == .false.) then
+        if (found .eqv. .false.) then
             call json_creator%create_object(inp, segment)
             call json%add("$rezone_advect", inp)
         end if
 
         tmp = segment // ".shorter_advect"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), .true., found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), .true., found=found)
 
         tmp = segment // ".fix_overflow"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), .true., found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), .true., found=found)
 
         tmp = segment // ".rezone_type"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), 0, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), 0, found=found)
 
         tmp = segment // ".line_calc"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), .false., found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), .false., found=found)
 
         return
     end subroutine Default_rezone_advect
@@ -248,26 +248,26 @@ contains
 
         tmp = segment
         call json%info(trim(tmp), found=found)
-        if (found == .false.) then
+        if (found .eqv. .false.) then
             call json_creator%create_object(inp, segment)
             call json%add("$checkpoint_restart", inp)
         end if
 
         tmp = segment // ".run_name"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), "", found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), "", found=found)
 
         tmp = segment // ".scr_prefix"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), "/home/", found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), "/home/", found=found)
 
         tmp = segment // ".checkpoint_seconds"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), 60.0, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), 60.0, found=found)
 
         tmp = segment // ".checkpoint_overhead"
         call json%info(trim(tmp), found=found)
-        if (found == .false.) call json%add(trim(tmp), 0.0, found=found)
+        if (found .eqv. .false.) call json%add(trim(tmp), 0.0, found=found)
 
         return
     end subroutine Default_checkpoint_restart
@@ -291,10 +291,10 @@ contains
             tmp = root
             tmp = trim(tmp) // "(" // int2str(i) // ")"
             call json%get(trim(tmp) , material, found)
-            if (found == .false.) cycle
+            if (found .eqv. .false.) cycle
             call json%get("$"//trim(material) // ".sie_0",var_r, found)
 
-            if (found == .false. .and. Str_eqv(material, "Vaccum") == .false. ) then
+            if (found .eqv. .false. .and. Str_eqv(material, "Vaccum") .eqv. .false. ) then
                 call json%update("$"//trim(material) // ".sie_0", 0, found)
             end if
         end do

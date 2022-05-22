@@ -461,7 +461,7 @@ contains
                 i = 1
                 do k = 1, nzp
                     do j = 1, nyp
-                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) == .true.) then
+                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) .eqv. .true.) then
                             values_dim1(i, j, k) = 0d0
                             values_dim2(i, j, k) = 0d0
                             values_dim3(i, j, k) = 0d0
@@ -473,7 +473,7 @@ contains
                 i = nxp
                 do k = 1, nzp
                     do j = 1, nyp
-                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) == .true.) then
+                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) .eqv. .true.) then
                             values_dim1(i, j, k) = 0d0
                             values_dim2(i, j, k) = 0d0
                             values_dim3(i, j, k) = 0d0
@@ -485,7 +485,7 @@ contains
                 j = 1
                 do k = 1, nzp
                     do i = 1, nxp
-                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) == .true.) then
+                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) .eqv. .true.) then
                             values_dim1(i, j, k) = 0d0
                             values_dim2(i, j, k) = 0d0
                             values_dim3(i, j, k) = 0d0
@@ -497,7 +497,7 @@ contains
                 j = nyp
                 do k = 1, nzp
                     do i = 1, nxp
-                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) == .true.) then
+                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) .eqv. .true.) then
                             values_dim1(i, j, k) = 0d0
                             values_dim2(i, j, k) = 0d0
                             values_dim3(i, j, k) = 0d0
@@ -509,7 +509,7 @@ contains
                 k = 1
                 do j = 1, nyp
                     do i = 1, nxp
-                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) == .true.) then
+                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) .eqv. .true.) then
                             values_dim1(i, j, k) = 0d0
                             values_dim2(i, j, k) = 0d0
                             values_dim3(i, j, k) = 0d0
@@ -520,7 +520,7 @@ contains
                 k = nzp
                 do j = 1, nyp
                     do i = 1, nxp
-                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) == .true.) then
+                        if (Check_corner_vertex(ivirt(i), jvirt(j), kvirt(k), virt_nxp, virt_nyp, virt_nzp) .eqv. .true.) then
                             values_dim1(i, j, k) = 0d0
                             values_dim2(i, j, k) = 0d0
                             values_dim3(i, j, k) = 0d0
