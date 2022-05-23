@@ -248,7 +248,7 @@ contains
         allocate(bc_c_wrap)
 
         write(my_id,'(i1)') Constructor%parallel_params%my_rank
-        open(unit=69, file="memes_" // my_id, status="replace", action="write")
+        open(unit=69, file="diags" // my_id, status="replace", action="write")
 
         if (Constructor%wilkins_scheme == 1) then 
             allocate(Constructor%previous_vertex_mass)
@@ -604,10 +604,10 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
         integer :: i
         integer, save :: counter_diag = 0
 
-!        do i=1,size(this%textual_diagnostics(1:))
-!            call this%textual_diagnostics(i)%Apply()
+        do i=1,size(this%textual_diagnostics(1:))
+            call this%textual_diagnostics(i)%Apply()
 !!            write(*,*) "WRITING"
-!        end do
+        end do
 !if ( associated(this%silo_diagnostic) ) call this%silo_diagnostic%Apply()
         !       do i=1,size(this%textual_diagnostics_hdf5(1:))
         !           call this%textual_diagnostics_hdf5(i)%Apply
@@ -683,7 +683,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
                         call this%Write_to_files()
         ncyc = 1
         if (this%rezone_type == 0) then
-            max_ncyc = 41
+            max_ncyc = 40
         else
             max_ncyc = 201
         end if

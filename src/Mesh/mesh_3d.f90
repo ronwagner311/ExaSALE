@@ -653,15 +653,15 @@ contains
         integer                           :: i, j, k
         real(8), dimension(:, :, :), pointer ::x, y, z
         call this%Point_to_data (x, y, z)
-        do k = 1, this%nz
-            do j = 1, this%ny
-                do i = 1, this%nx
+        do k = 1, this%nzp -1
+            do j = 1, this%nyp - 1
+                do i = 1, this%nxp - 1
                     this%avg_coordinates(1)%values(i, j, k) = 0.125d0 * ( x(i, j, k) + x (i + 1, j, k) + x(i + 1, j + 1, k)&
-                        + x(i, j + 1, j) + x(i, j, k + 1) + x(i + 1, j, k + 1) + x(i + 1, j + 1, k + 1) + x(i, j + 1, k + 1))
+                        + x(i, j + 1, k) + x(i, j, k + 1) + x(i + 1, j, k + 1) + x(i + 1, j + 1, k + 1) + x(i, j + 1, k + 1))
                     this%avg_coordinates(2)%values(i, j, k) = 0.125d0 * ( y(i, j, k) + y(i + 1, j, k) + y(i + 1, j + 1, k)&
-                        + y(i, j + 1, j) + y(i, j, k + 1) + y(i + 1, j, k + 1) + y(i + 1, j + 1, k + 1) + y(i, j + 1, k + 1))
+                        + y(i, j + 1, k) + y(i, j, k + 1) + y(i + 1, j, k + 1) + y(i + 1, j + 1, k + 1) + y(i, j + 1, k + 1))
                     this%avg_coordinates(3)%values(i, j, k) = 0.125d0 * ( z(i, j, k) + z (i + 1, j, k) + z(i + 1, j + 1, k)&
-                        + z(i, j + 1, j) + z(i, j, k + 1) + z(i + 1, j, k + 1) + z(i + 1, j + 1, k + 1) + z(i, j + 1, k + 1))
+                        + z(i, j + 1, k) + z(i, j, k + 1) + z(i + 1, j, k + 1) + z(i + 1, j + 1, k + 1) + z(i, j + 1, k + 1))
                 end do
             end do
         end do
