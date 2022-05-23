@@ -288,13 +288,14 @@ contains
         call json%info(trim(tmp), n_children=num_mats, found=found)
         root = tmp
         do i = 1, num_mats
+
             tmp = root
             tmp = trim(tmp) // "(" // int2str(i) // ")"
             call json%get(trim(tmp) , material, found)
             if (found .eqv. .false.) cycle
             call json%get("$"//trim(material) // ".sie_0",var_r, found)
 
-            if (found .eqv. .false. .and. Str_eqv(material, "Vaccum") .eqv. .false. ) then
+            if ( (found .eqv. .false.) .and. (Str_eqv(material, "Vaccum") .eqv. .false.) ) then
                 call json%update("$"//trim(material) // ".sie_0", 0, found)
             end if
         end do

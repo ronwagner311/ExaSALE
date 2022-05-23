@@ -58,7 +58,7 @@ contains
 !      real(8)                               , intent(in)           :: sie_0
       type(cell_bc_wrapper_t), dimension(:), pointer,  intent(in) :: bc_cell   
       type(boundary_parameters_t), pointer, intent(in) :: bc_params
-
+integer :: i
       allocate(this%cell_mass)
       allocate(this%initial_layers_of_mats)
       allocate(this%sie)
@@ -66,7 +66,9 @@ contains
       allocate(this%material_ids(nmats))
       this%nmats = nmats
 
-      this%material_ids = mat_ids
+do i = 1, nmats
+      this%material_ids(i) = mat_ids(i)
+end do
 
       this%vof = material_quantity_t(0d0, nxp, nyp, nzp,nmats, bc_cell, bc_params)
       this%sie = material_quantity_t (0d0, nxp, nyp, nzp, nmats,bc_cell, bc_params)

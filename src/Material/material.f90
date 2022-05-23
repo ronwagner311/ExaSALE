@@ -10,7 +10,7 @@ module material_module
     use density_module                , only : density_t
     use temperature_module            , only : temperature_t
     use sound_velocity_module         , only : sound_velocity_t
-        use ideal_gas_module                , only : ideal_gas_t
+    use ideal_gas_module                , only : ideal_gas_t
 
     use cell_boundary_condition_module, only : cell_bc_wrapper_t
     use volume_module                 , only : volume_t
@@ -68,7 +68,7 @@ contains
         use boundary_parameters_module, only : boundary_parameters_t
 
         implicit none
-!        type (eos_wrapper_t), dimension(:), pointer                  , intent(in out)       :: eos
+        !        type (eos_wrapper_t), dimension(:), pointer                  , intent(in out)       :: eos
         integer, dimension(:), allocatable        , intent(in)           :: mat_ids
         integer                               , intent(in)           :: nxp
         integer                               , intent(in)           :: nyp
@@ -85,16 +85,16 @@ contains
         type(cell_bc_wrapper_t), dimension(:), pointer,  intent(inout) :: bc_cell
         type(boundary_parameters_t), pointer, intent(in) :: bc_params
 
-!        type(materials_in_cells_t)   ,pointer                :: mat_cells
-!        type(cell_bc_wrapper_t), dimension(:), pointer:: bc_cell
-!        type(boundary_parameters_t), pointer :: bc_params
-!        real(8), dimension(:), pointer                                          :: atomic_mass
-!        real(8) , dimension(:), pointer                                         :: gamma_gas
-!        real(8), dimension(:), pointer                                         :: rho_0
-!        real(8), dimension(:), pointer                                          :: sie_0
-!        real(8)                                          :: temperature_init
-!        real(8), dimension(:), pointer                                          :: num_protons
-!        real(8), dimension(:), pointer                                          :: num_protons_2
+        !        type(materials_in_cells_t)   ,pointer                :: mat_cells
+        !        type(cell_bc_wrapper_t), dimension(:), pointer:: bc_cell
+        !        type(boundary_parameters_t), pointer :: bc_params
+        !        real(8), dimension(:), pointer                                          :: atomic_mass
+        !        real(8) , dimension(:), pointer                                         :: gamma_gas
+        !        real(8), dimension(:), pointer                                         :: rho_0
+        !        real(8), dimension(:), pointer                                          :: sie_0
+        !        real(8)                                          :: temperature_init
+        !        real(8), dimension(:), pointer                                          :: num_protons
+        !        real(8), dimension(:), pointer                                          :: num_protons_2
 
         real(8), dimension (:,:,:,:), pointer                          :: density_vof
         real(8), dimension (:,:,:,:), pointer                          :: sie_vof
@@ -144,13 +144,14 @@ contains
 
         do i = 1, nmats
             Constructor%equation_of_state(i) = eos_c_wrap
+            Constructor%atomic_mass(i) = atomic_mass(i)
+            Constructor%num_protons(i) = num_protons(i)
+            Constructor%num_protons_2(i) = num_protons_2(i)
+            Constructor%gamma_gas(i) = gamma_gas(i)
         end do
 
 
-        Constructor%atomic_mass = atomic_mass
-        Constructor%num_protons = num_protons
-        Constructor%num_protons_2 = num_protons_2
-        Constructor%gamma_gas = gamma_gas
+
         call Constructor%density%Point_to_data(density_vof)
         call Constructor%vof%Point_to_data(mat_vof)
         call Constructor%temperature%Point_to_data(temp)
@@ -183,9 +184,9 @@ contains
     subroutine Apply_eos(this, nx, ny, nz, emf, is_old_temperature)
         class(material_t)                  , intent(in out)    :: this
 
-!        integer                            , intent(in    ) :: mat_num
+        !        integer                            , intent(in    ) :: mat_num
 
-!        integer                            , intent(in    ) :: nrg_or_tmp
+        !        integer                            , intent(in    ) :: nrg_or_tmp
         integer                            , intent(in    ) :: nx
         integer                            , intent(in    ) :: ny
         integer                            , intent(in    ) :: nz
@@ -251,15 +252,15 @@ contains
     subroutine Clean_data(this)
         class (material_t)            :: this
 
-!        call this%Clean_material_base()
-!        call this%dp_de          %Clean_data
-!        call this%dp_drho        %Clean_data
-!        call this%dt_de          %Clean_data
-!        call this%dt_drho        %Clean_data
-!        call this%pressure       %Clean_pressure
-!        call this%density        %Clean_density
-!        call this%temperature    %Clean_temperature
-!        call this%temperature_old%Clean_temperature
+    !        call this%Clean_material_base()
+    !        call this%dp_de          %Clean_data
+    !        call this%dp_drho        %Clean_data
+    !        call this%dt_de          %Clean_data
+    !        call this%dt_drho        %Clean_data
+    !        call this%pressure       %Clean_pressure
+    !        call this%density        %Clean_density
+    !        call this%temperature    %Clean_temperature
+    !        call this%temperature_old%Clean_temperature
     end subroutine Clean_data
 
     subroutine Write_material(this, unit, iostat, iomsg)
@@ -267,43 +268,43 @@ contains
         integer,      intent(in)     :: unit
         integer,      intent(out)    :: iostat
         character(*), intent(in out)  :: iomsg
-!
-!#ifdef DEBUG
-!        write(*,*) '@@@ in Write_material @@@'
-!#endif
-!
-!        call this%Write_material_base(unit, iostat=iostat, iomsg=iomsg)
-!
-!        call this%pressure%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-!        call this%sound_vel%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-!        call this%temperature%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-!        call this%temperature_old%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-!        call this%density%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-!
-!        write(unit, iostat=iostat, iomsg=iomsg) &
-!            this%atomic_mass, &
-!            this%num_protons, &
-!            this%num_protons_2, &
-!            this%gamma_gas, &
-!            this%dp_de, &
-!            this%dp_drho, &
-!            this%dt_de, &
-!            this%dt_drho
-!
-!#ifdef DEBUG
-!        write(*,*) &
-!            'atomic_mass', &
-!            this%atomic_mass, &
-!            'num_protons', &
-!            this%num_protons, &
-!            'num_protons_2', &
-!            this%num_protons_2, &
-!            'gamma_gas', &
-!            this%gamma_gas, &
-!            '###'
-!
-!        write(*,*) '@@@ end Write_material @@@'
-!#endif
+    !
+    !#ifdef DEBUG
+    !        write(*,*) '@@@ in Write_material @@@'
+    !#endif
+    !
+    !        call this%Write_material_base(unit, iostat=iostat, iomsg=iomsg)
+    !
+    !        call this%pressure%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+    !        call this%sound_vel%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+    !        call this%temperature%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+    !        call this%temperature_old%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+    !        call this%density%Write_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+    !
+    !        write(unit, iostat=iostat, iomsg=iomsg) &
+    !            this%atomic_mass, &
+    !            this%num_protons, &
+    !            this%num_protons_2, &
+    !            this%gamma_gas, &
+    !            this%dp_de, &
+    !            this%dp_drho, &
+    !            this%dt_de, &
+    !            this%dt_drho
+    !
+    !#ifdef DEBUG
+    !        write(*,*) &
+    !            'atomic_mass', &
+    !            this%atomic_mass, &
+    !            'num_protons', &
+    !            this%num_protons, &
+    !            'num_protons_2', &
+    !            this%num_protons_2, &
+    !            'gamma_gas', &
+    !            this%gamma_gas, &
+    !            '###'
+    !
+    !        write(*,*) '@@@ end Write_material @@@'
+    !#endif
 
     end subroutine Write_material
 
@@ -312,43 +313,43 @@ contains
         integer,      intent(in)     :: unit
         integer,      intent(out)    :: iostat
         character(*), intent(in out)  :: iomsg
-!
-!#ifdef DEBUG
-!        write(*,*) '@@@ in Read_material @@@'
-!#endif
-!
-!        call this%Read_material_base(unit, iostat=iostat, iomsg=iomsg)
-!
-!        call this%pressure%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-!        call this%sound_vel%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-!        call this%temperature%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-!        call this%temperature_old%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-!        call this%density%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
-!
-!        read(unit, iostat=iostat, iomsg=iomsg) &
-!            this%atomic_mass, &
-!            this%num_protons, &
-!            this%num_protons_2, &
-!            this%gamma_gas, &
-!            this%dp_de, &
-!            this%dp_drho, &
-!            this%dt_de, &
-!            this%dt_drho
-!
-!#ifdef DEBUG
-!        write(*,*) &
-!            'atomic_mass', &
-!            this%atomic_mass, &
-!            'num_protons', &
-!            this%num_protons, &
-!            'num_protons_2', &
-!            this%num_protons_2, &
-!            'gamma_gas', &
-!            this%gamma_gas, &
-!            '###'
-!
-!        write(*,*) '@@@ end Read_material @@@'
-!#endif
+    !
+    !#ifdef DEBUG
+    !        write(*,*) '@@@ in Read_material @@@'
+    !#endif
+    !
+    !        call this%Read_material_base(unit, iostat=iostat, iomsg=iomsg)
+    !
+    !        call this%pressure%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+    !        call this%sound_vel%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+    !        call this%temperature%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+    !        call this%temperature_old%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+    !        call this%density%Read_quantity_abstract(unit, iostat=iostat, iomsg=iomsg)
+    !
+    !        read(unit, iostat=iostat, iomsg=iomsg) &
+    !            this%atomic_mass, &
+    !            this%num_protons, &
+    !            this%num_protons_2, &
+    !            this%gamma_gas, &
+    !            this%dp_de, &
+    !            this%dp_drho, &
+    !            this%dt_de, &
+    !            this%dt_drho
+    !
+    !#ifdef DEBUG
+    !        write(*,*) &
+    !            'atomic_mass', &
+    !            this%atomic_mass, &
+    !            'num_protons', &
+    !            this%num_protons, &
+    !            'num_protons_2', &
+    !            this%num_protons_2, &
+    !            'gamma_gas', &
+    !            this%gamma_gas, &
+    !            '###'
+    !
+    !        write(*,*) '@@@ end Read_material @@@'
+    !#endif
 
     end subroutine Read_material
 

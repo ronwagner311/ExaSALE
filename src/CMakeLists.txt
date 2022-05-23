@@ -12,10 +12,10 @@ add_definitions($ENV{DEFS})
 
 if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
 set(ENV{JSONFORTRAN} "/home/reemh/Downloads/json-fortran_gnu")
-set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O2 -ffree-line-length-512")
+set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -fcheck=all -O0 -g -ffree-line-length-512")
 else()
 set(ENV{JSONFORTRAN} "/home/reemh/Downloads/json-fortran")
-set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O2 -qopenmp")
+set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O0 -qopenmp -g ")
 endif()
 
 #set(CMAKE_Fortran_FLAGS "-g -qopenmp -fpp -fPIC -traceback -fpe0")

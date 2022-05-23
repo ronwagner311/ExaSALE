@@ -20,7 +20,7 @@ module datafile_module
 
         integer, public :: with_cr                
 
-        character(len=255),allocatable, public        :: name
+        character(len=255), public        :: name
 
         integer, public ::  sw_vert_mass      
         integer, public ::  sw_nraz           
@@ -55,7 +55,7 @@ module datafile_module
         integer, public :: threads 
 
         integer, public                              :: mesh_type           
-        integer, dimension(:), allocatable, public   :: boundary_conditions 
+        integer, dimension(:), allocatable, public   :: boundary_conditions
 
         integer, public                              :: number_layers_i  
         integer, public                              :: number_layers_j  
@@ -68,6 +68,7 @@ module datafile_module
         integer                           , public   :: reduct_num_mat   
         integer                           , public   :: n_materials   
         integer, dimension(:), allocatable, public   :: mat_index
+        integer, dimension(:), allocatable, public   :: mat_ids
         integer, dimension(:), allocatable, public   :: mat_eos
         real(8), dimension(:), allocatable, public   :: mat_atomic_mass
         real(8), dimension(:), allocatable, public   :: mat_z
@@ -76,26 +77,25 @@ module datafile_module
         real(8), dimension(:), allocatable, public   :: mat_sie_0
         real(8), dimension(:), allocatable, public   :: mat_gamma_gas
 
-        integer, dimension(:, :), allocatable, public    :: start_layer_index_r 
-        integer, dimension(:, :), allocatable, public    :: start_layer_index_t 
-        integer, dimension(:, :), allocatable, public    :: start_layer_index_p 
+        integer, dimension(:, :), allocatable, public    :: start_layer_index_r
+        integer, dimension(:, :), allocatable, public    :: start_layer_index_t
+        integer, dimension(:, :), allocatable, public    :: start_layer_index_p
 
-        integer, dimension(:)   , allocatable, public     :: contour_i_type 
-        real(8), dimension(:,:) , allocatable, public     :: contour_i_line 
-        real(8), dimension(:)   , allocatable, public     :: zone_i_d 
-        integer, dimension(:)   , allocatable, public     :: zone_i_type 
+        integer, dimension(:)   , allocatable, public     :: contour_i_type
+        real(8), dimension(:,:) , allocatable, public     :: contour_i_line
+        real(8), dimension(:)   , allocatable, public     :: zone_i_d
+        integer, dimension(:)   , allocatable, public     :: zone_i_type
 
 
-        real(8), dimension(:, :), allocatable, public     :: theta0         
-        integer, dimension(:)   , allocatable, public     :: contour_j_type 
-        real(8), dimension(:)   , allocatable, public     :: zone_j_d 
-        integer, dimension(:)   , allocatable, public     :: zone_j_type 
+        real(8), dimension(:, :), allocatable, public     :: theta0
+        integer, dimension(:)   , allocatable, public     :: contour_j_type
+        real(8), dimension(:)   , allocatable, public     :: zone_j_d
+        integer, dimension(:)   , allocatable, public     :: zone_j_type
 
-        real(8), dimension(:, :), allocatable, public     :: phi0           
-        integer, dimension(:)   , allocatable, public     :: contour_k_type 
-        real(8), dimension(:)   , allocatable, public     :: zone_k_d 
-        integer, dimension(:)   , allocatable, public     :: zone_k_type 
-
+        real(8), dimension(:, :), allocatable, public     :: phi0
+        integer, dimension(:)   , allocatable, public     :: contour_k_type
+        real(8), dimension(:)   , allocatable, public     :: zone_k_d
+        integer, dimension(:)   , allocatable, public     :: zone_k_type
 
         integer, public :: rezone_type
         logical, public :: shorter_advect
@@ -106,11 +106,9 @@ module datafile_module
 
         integer                                       , public      :: num_diag_text 
         integer                                       , public      :: num_diag_hdf5 
-        character(len=80), dimension(:), allocatable, public        :: diag_types 
-        character(len=80), dimension(:), allocatable, public        :: diag_variables 
-        character(len=80), dimension(:), allocatable, public        :: diag_names 
-
-        character(len=1), dimension(:),allocatable, public            :: run_name
+        character(len=80), dimension(:), allocatable, public        :: diag_types
+        character(len=80), dimension(:), allocatable, public        :: diag_variables
+        character(len=80), dimension(:), allocatable, public        :: diag_names
 
     contains
            procedure, public :: Parse_diagnostics
@@ -144,19 +142,24 @@ contains
         type(json_value), pointer :: p
         integer :: i,j,k
         logical :: found
+
         call json%initialize()
+
         call json%load(filename = datafile)
 
         call Set_defaults(json)
+
         call Replace_words(json)
 
         call Constructor%Parse_data(json)
+
         call Constructor%Parse_switches(json)
         call Constructor%Parse_simulation_parameters(json)
         call Constructor%Parse_rezone_advect(json)
         call Constructor%Parse_mesh(json)
         call Constructor%Parse_layers(json)
         call Constructor%Parse_materials(json)
+
         call Constructor%Parse_contours(json)
         call Constructor%Parse_zones(json)
         call Constructor%Parse_parallel(json)
@@ -169,7 +172,7 @@ contains
         end if
 
 
-    end function
+    end function Constructor
 
     subroutine Parse_diagnostics(this, json)
         implicit none
@@ -183,7 +186,7 @@ contains
         character(len=:),allocatable :: diag, diag_variable, diag_type
         logical :: found
         integer :: num_grps, i, j, num_diags,k,num_variables, total_files, diag_counter
-        
+
         this%num_diag_text = 0
         tmp = segment // ".number_diagnostics"
         root = segment // ".group"
@@ -312,7 +315,10 @@ contains
         integer :: var
 
         tmp = segment // ".name"
+
+
         call json%get(trim(tmp), parallel_param, found)
+
         if (found .eqv. .false.) call error_msg("Bad value in data segment")
         this%name = parallel_param
 
@@ -628,6 +634,7 @@ contains
         this%n_materials = num_mats
         this%reduct_num_mat = 0
         allocate(this%mat_index(num_mats))
+
         allocate(this%mat_eos(num_mats))
         allocate(this%mat_atomic_mass(num_mats))
         allocate(this%mat_z(num_mats))
@@ -744,7 +751,7 @@ contains
             if (found .eqv. .false.) call error_msg("Error in countour in datafile")
             this%contour_i_type(i) = cntr_type
             select case(cntr_type)
-                case (0) 
+                case (0)
                     tmp = trim(cntr_root) // ".y1"
                     call json%get(trim(tmp), var_r, found)
                     if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
@@ -765,7 +772,7 @@ contains
                     if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
                     this%contour_i_line(i, 4) = var_r
 
-                case(1)  
+                case(1)
                     tmp = trim(cntr_root) // ".y1"
                     call json%get(trim(tmp), var_r, found)
                     if (found .eqv. .false.) call error_msg("Error in contour i in datafile")
