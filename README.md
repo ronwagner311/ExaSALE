@@ -62,6 +62,24 @@ To run the code using slurm execute the python script slurm_run.py located in sr
 
 The scripts runs the datafile located in src/Datafiles/datafile.json
 
+## Datafile
+The datafile is written as a json file (parsed via the json-fortran module explained above -- it is possible to write a new parser as long as it knows how to read a json file). The main objective of the datafile is to be parsed by the src/Input/datafile_object.f90 module which reads and parses the datafile in order to properly define the execution.
+
+The following segment will describe the datafile in pieces.
+
+1. Materials - Each material is defined by a name, its EoS (currently only ideal gas is allowed) and other properties such as density, initial energy etc:
+```json
+"Your_Material": {
+        "A": 4.0, ! atomic number
+        "index": 1,  ! Index that will appear in the order of materials
+        "Z_2": 4.0,  
+        "gamma_gas": 1.667, 
+        "rho_0": 1.0, ! initial density
+        "Z": 2.0, 
+        "sie_0": 0.0, ! if set to 0, the energy will be calculated from the EoS (given a temperature)
+        "eos_type": "ideal" ! type of EoS, can see in src/Input/replace_words.f90 for more options
+    } 
+```
 
 ## Sedov-Taylor
 
