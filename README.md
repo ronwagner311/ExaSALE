@@ -232,6 +232,8 @@ The following segment will describe the datafile in pieces.
     }
 ```
 
+For more examples please refer to the different datafiles in src/Datafiles. 
+
 ## Sedov-Taylor
 
 To execute sedov-taylor please refer to the datafile Datafiles/datafile_sedov_taylor_3d.json, simply execute the code explained above.
