@@ -56,11 +56,28 @@ Once the makefiles are created, you can simple compile the project with `./make.
 
 
 ## Execution
-To run the code simply execute the bash script ./run.sh located in src/Scripts. The script executes the mpirun command, so beware that if you change number of processes in the datafile, this line should be updated.
+### Execute Locally
+To run the code simply execute the bash script `./run.sh` located in `src/Scripts` directory.\
+The script executes the following mpirun command:
+```
+mpirun -n np ../exec/main
+```
+Where `np` is the number of mpi processes that are being used.\
+In order to run Backus the number of processes in the executation command needs to be similar to the number of processes in the datafile.\
+So if you change the number of processes in the datafile **you need to update the number of processes in `run.sh` accordingly**.
 
-To run the code using slurm execute the python script slurm_run.py located in src/Scripts. The script checks the number of processes in the datafile and send the relevant job to slurm. Please note that you need to change the partion for your machine in the script and change the module load relevant for your machine.
-
-The scripts runs the datafile located in src/Datafiles/datafile.json
+#### Execute on a Cluster
+To run the code using slurm execute the python script `slurm_run.py` located in `src/Scripts` directory.\
+The script checks the number of processes in the datafile and send the relevant job to slurm. The scripts runs the datafile located in `src/Datafiles/datafile.json`\
+Please note that you need to change the partition in the job request script:
+```
+-p mixedp
+```
+In our case the partition is mixedp, you need to change it to the partition you are using on your cluster.\
+In addition, you need to change the module load on the job request to the modules you are loading on your claster (if needed). The relevant part in the job request script is:
+```
+module load intel/18.0.1.163 openmpi/4.0.4_intel mpi/impi-intel2018 cmake anaconda2 ScientificLibraries/silo/4.11
+```
 
 ## Datafile
 The datafile is written as a json file (parsed via the json-fortran module explained above -- it is possible to write a new parser as long as it knows how to read a json file). The main objective of the datafile is to be parsed by the src/Input/datafile_object.f90 module which reads and parses the datafile in order to properly define the execution. 
@@ -235,8 +252,236 @@ The following segment will describe the datafile in pieces.
 For more examples please refer to the different datafiles in src/Datafiles. 
 
 ## Sedov-Taylor
-
-To execute sedov-taylor please refer to the datafile Datafiles/datafile_sedov_taylor_3d.json, simply execute the code explained above.
+#### Datafile exmaple
+The Sedov-Taylor datafile is as shown below:
+```json
+{
+    "Hel": {
+        "A": 1.0, 
+        "Z_2": 1.0, 
+        "gamma_gas": 1.667, 
+        "rho_0": 1.0, 
+	"sie_0": 1E-3,
+        "Z": 1.0, 
+        "eos_type": "ideal"
+    },
+    "Air": {
+        "A": 1.0, 
+        "Z_2": 1.0, 
+        "gamma_gas": 1.667, 
+        "rho_0": 1.0, 
+	"sie_0": 5.0277E3,
+        "Z": 1.0, 
+        "eos_type": "ideal"
+    }, 
+    "switches": {
+        "sw_symmetry": 0, 
+        "sw_vert_mass": 1, 
+        "sw_nraz": 1,
+        "sw_wilkins": 0
+    },
+    "cell_set": {
+        "mesh_type": "x_y", 
+        "boundary_conditions": [
+            2, 
+            2, 
+            2, 
+            2,
+            2,
+            2
+        ]
+    }, 
+    "contours": {
+        "contours_j": [
+            {
+                "units": "regular", 
+                "theta0": 0.0
+            },
+            {
+                "units": "regular", 
+                "theta0": 0.025
+            }, 
+            {
+                "units": "regular", 
+                "theta0": 1.125
+            }
+        ],
+        "contours_k": [
+            {
+                "units": "regular",
+                "phi0": 0.0
+            },
+            {
+                "units": "regular",
+                "phi0": 0.025
+            },
+            {
+                "units": "regular",
+                "phi0": 1.125
+            }
+        ],
+        "contours_i": [
+            {
+                "y1": -10, 
+                "x1": 0, 
+                "y2": 10.0,
+                "x2": 0, 
+                "contour_type": "line"
+            }, 
+            {
+                "y1": -10, 
+                "x1": 0.025, 
+                "y2": 10.0, 
+                "x2": 0.025, 
+                "contour_type": "line"
+            },
+            {
+                "y1": -10, 
+                "x1": 1.125, 
+                "y2": 10.0, 
+                "x2": 1.125, 
+                "contour_type": "line"
+            }
+        ]
+    }, 
+    "zone": {
+        "zone_i": [
+            {
+                "type": "constant", 
+                "dr": 1.0
+            }, 
+            {
+                "type": "constant", 
+                "dr": 1.0
+            }
+        ], 
+        "zone_j": [
+            {
+                "d_theta": 1.0, 
+                "type": "constant"
+            },
+            {
+                "d_theta": 1.0, 
+                "type": "constant"
+            }
+        ],
+        "zone_k": [
+            {
+                "d_phi": 1.0,
+                "type": "constant"
+            },
+            {
+                "d_phi": 1.0,
+                "type": "constant"
+            }
+        ]
+    }, 
+    "diagnostics": {
+        "number_diagnostics": 1,
+        "group": [
+            {
+                "condition": 1,
+                "diagnostic": [  
+                    {
+                        "type": "silo",
+                        "variables": ["velocity_x", "velocity_y","position_x", "position_y", "position_z", "pressure", "density", "SIE", "time", "index"]
+                    }
+                ]
+            }
+        ]
+    },
+    "layers_materials": {
+    	"number_layers_j": 2,
+        "number_cells_j": [
+            1,
+            70
+        ], 
+        "number_layers_i": 2, 
+        "number_cells_i": [
+            1,
+            70
+        ],
+        "number_layers_k":2,
+        "number_cells_k": [
+            1,
+            70
+        ],
+        "materials": [
+            "Air", 
+            "Hel", 
+            "Hel",
+            "Hel",
+            "Hel",
+            "Hel"
+        ]
+    }, 
+    "data": {
+        "nyb": 3, 
+        "name": "sod_3d", 
+        "nxb": 102,
+	    "nzb": 102
+    }, 
+    "simulation_parameters": {
+        "time_final": 2e-3, 
+        "init_temperature": 300, 
+        "dt0": 1e-14, 
+        "dt_factor": 0.1, 
+        "cyl": 1, 
+        "dt_max": 0.1,
+        "linear_visc_fac": 0.2,
+        "quad_visc_fac": 1,
+        "dt_cour_fac": 3
+    },
+    "rezone_advect":{
+        "rezone_type": "lagrange"
+    }
+    "parallel": {
+	"np": 1,
+	"npx": 1,
+	"npy": 1,
+	"npz": 1
+    }
+}
+```
+To execute sedov-taylor please copy to `Datafiles/datafile.json` the Sedov-Taylor 3D datafile, which is `Datafiles/datafile_sedov_taylor_3d.json`, And simply execute the code as explained above.\
+In order to change the mesh size you need change the number_cells section in the datafile.\
+Here is an example of the number_cells section in the datafile for 11^3 mesh cells:
+```json
+"number_layers_j": 2,
+        "number_cells_j": [
+            1,
+            10
+        ], 
+        "number_layers_i": 2, 
+        "number_cells_i": [
+            1,
+            10
+        ],
+        "number_layers_k":2,
+        "number_cells_k": [
+            1,
+            10
+        ],
+```
+In order to use parallelization, you need to add the following section to the datafile:
+```json
+"parallel": {
+	"np": p,
+	"npx": nx,
+	"npy": ny,
+	"npz": nz
+    }
+```
+You need to set `p` in `"np"` to the total number of mpi processes you want, and set the number of mpi processes you want in each axis by changing `nx, ny, nz` to the desire mpi processes number. Here is an example for the parallel section for 8 mpi processes 2 in each of the axies:
+```json
+"parallel": {
+	"np": 8,
+	"npx":2,
+	"npy":2,
+	"npz":2
+    }
+```
+#### Sedov-Taylor run example
 For example this is the initial state of the problem (3D, 15^3 cells)
 ![Initial Problem](https://github.com/Scientific-Computing-Lab-NRCN/Backus/blob/main/Images/visit0005.png)
 
