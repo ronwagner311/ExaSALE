@@ -103,6 +103,7 @@ The following segment will describe the datafile in pieces.
         ]
     }, 
 ```
+
 3. Boundary condition & Mesh type - Every phyiscal problems requires boundary conditions and defenition of which mesh_type. Currently, it supports 3 different meshes: 2d xy, 3d xyz and 3d pyramid. To add a new mesh, simply expand the src/Mesh/mesh_2d or src/Mesh/mesh_3d to build a new way for the X,Y,Z coordinates. the values are integers, which are explained in src/Main/problem. 
 ```json
 "cell_set": {
@@ -117,7 +118,7 @@ The following segment will describe the datafile in pieces.
 ```
 
 4. General switches - define different symetries, vertex mass calculation (diamond, etc.) and schemes in general, is defined in the following json segment. 
-``json
+```json
 "switches": {
         "sw_symmetry": 0, 
 	"cyl": 0,
