@@ -212,9 +212,6 @@ write(*,*) " making the sod"
         DO K=1, d3 - 1
             DO J=1, d2 - 1
                 DO I=1, d1 - 1
-                    if ( (i_from <= i .and. i <= i_to) .and. &
-                         (j_from <= j .and. j <= j_to) .and. &
-                         (k_from <= k .and. k <= k_to)) then
                         if (parallel_params%i_virt(i) == 1 .and. &
                             parallel_params%j_virt(j) == 1 .and. &
                             parallel_params%k_virt(k) == 1) then
@@ -223,7 +220,6 @@ write(*,*) " making the sod"
                         else
                             init_values(i, j, k) = 2
                         end if
-                    end if
                     !write(*,*),"init_values: ",i,j,k, init_values(i,j,k)
                 END DO
             END DO

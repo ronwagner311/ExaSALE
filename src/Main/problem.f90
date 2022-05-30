@@ -175,8 +175,8 @@ contains
         real(8), dimension(:,:,:,:), pointer :: cell_mass_vof,density_vof
 
         integer :: myid, numprocs, ierr
-        integer :: nxp, nyp, nzp, nx,ny,nz
-        character(1) :: my_id
+        integer :: nxp, nyp, nzp, nx,ny,nz, m
+        character(5) :: my_id
         integer :: rank 
 
         call Constructor%Initialize_communication(df)
@@ -247,8 +247,19 @@ contains
         if (df%dimension == 3) allocate(bc_c_wrap_arr(6))
         allocate(bc_c_wrap)
 
-        write(my_id,'(i1)') Constructor%parallel_params%my_rank
-        open(unit=69, file="diags" // my_id, status="replace", action="write")
+
+
+        if (Constructor%parallel_params%my_rank <= 9) then
+            write(my_id,'(i1)') Constructor%parallel_params%my_rank
+        elseif (Constructor%parallel_params%my_rank <= 99) then
+            write(my_id,'(i2)') Constructor%parallel_params%my_rank
+        else
+            write(my_id,'(i3)') Constructor%parallel_params%my_rank
+        end if
+
+        write(*,*) trim(my_id)
+
+        open(unit=69, file="diags" // trim(my_id), status="replace", action="write")
 
         if (Constructor%wilkins_scheme == 1) then 
             allocate(Constructor%previous_vertex_mass)
@@ -683,7 +694,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
                         call this%Write_to_files()
         ncyc = 1
         if (this%rezone_type == 0) then
-            max_ncyc = 40
+            max_ncyc = 400000
         else
             max_ncyc = 201
         end if
@@ -694,7 +705,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
                 call this%time%Update_time()
                 call this%Write_to_files()
                 ncyc = ncyc + 1
-!                write(*,*)" DONE CYCLE!"
+                write(*,*)" DONE CYCLE!"
             !       call this%cr%Checkpoint(ckpt_name)
             end do
 
@@ -706,6 +717,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
                 call this%Write_to_files()
                 counter = counter + 1
                 ncyc = ncyc + 1
+                write(*,*)" DONE CYCLE!", ncyc
             !      call this%cr%Checkpoint(ckpt_name)
             end do
         end if
