@@ -705,7 +705,6 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
                 call this%time%Update_time()
                 call this%Write_to_files()
                 ncyc = ncyc + 1
-                write(*,*)" DONE CYCLE!"
             !       call this%cr%Checkpoint(ckpt_name)
             end do
 
@@ -717,7 +716,6 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
                 call this%Write_to_files()
                 counter = counter + 1
                 ncyc = ncyc + 1
-                write(*,*)" DONE CYCLE!", ncyc
             !      call this%cr%Checkpoint(ckpt_name)
             end do
         end if
