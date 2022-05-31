@@ -694,7 +694,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
                         call this%Write_to_files()
         ncyc = 1
         if (this%rezone_type == 0) then
-            max_ncyc = 400000
+            max_ncyc = 20
         else
             max_ncyc = 201
         end if

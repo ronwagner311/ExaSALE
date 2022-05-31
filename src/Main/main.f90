@@ -18,7 +18,7 @@ program main
 
     allocate(prob)
 
-    df_obj = datafile_t("/home/reemh/eclipse-workspace/Backus_test/src/Datafiles/datafile.json")
+    df_obj = datafile_t("../Datafiles/datafile.json")
 
     prob = problem_t(df_obj)
     call prob%Start_calculation()
