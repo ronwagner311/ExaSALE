@@ -5,7 +5,7 @@
 #module purge
 #module load intel/18.0.1.163 openmpi/4.0.4_intel cmake 
 #module load cmake/X.XX.2 eclipse/2018 anaconda/2.5.0 gcc/9.1.0 intel/2017 pFUnit/3.2.9-intel mpi/openmpi-1.6.4-gcc-9.1.0 hdf5/1.8.9-openmpi-1.6.4-gcc-9.1.0 silo/4.8-openmpi-1.6.4-gcc-9.1.0
-module load anaconda2
+#module load anaconda2
 #source activate backus-openmpi-1.10.4-intel-2017
 #SCR_LIB_FLAGS="-lscrf -L${SCR_PATH}/scr/lib64 -lscr"
 #SCR_INCLUDE_FLAGS="-I${SCR_PATH}/scr/include -I/usr/include -I."
@@ -16,10 +16,10 @@ cd ../../build
 if test "$1" = "GNU"
 then
   echo "@@@@ GNU @@@@"
-  FC=mpifort cmake ../src/
+  FC=mpif90 cmake ../src/
 else
   echo "@@@@ INTEL @@@@"
-  FC=mpiifort cmake ../src 
+  FC=mpif90 cmake ../src 
 fi
 #if test "$1" = tests
 #then 

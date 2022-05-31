@@ -56,7 +56,7 @@ def runner(df, gnu):
 ##        + '#SBATCH -n {0} -N {1} --exclusive --threads-per-core={2} -p mixedp -x node0[01,06-25]  --error=slurm-%j.err --output=slurm-%j.out\n'.format(
         + '#SBATCH -n {0} -N {1} --exclusive --threads-per-core={2} -p mixedp  --error=slurm-%j.err --output=slurm-%j.out\n'.format(
             np, N, threads)
-        + 'export OMP_NUM_THREADS={0}\n'.format(threads)
+        + 'export OMP_NUM_THREADS={0}\n ml purge\n'.format(threads)
         #+ 'module load intel/18.0.1.163 openmpi/4.0.4_intel mpi/impi-intel2018 cmake anaconda2 ScientificLibraries/silo/4.11\n'
         + module_load
         + '{0}\n'.format(execute_command)
