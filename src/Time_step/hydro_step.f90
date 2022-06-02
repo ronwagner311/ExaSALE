@@ -481,8 +481,8 @@ contains
         tmp = omp_get_wtime()
         call this%total_sie%Exchange_virtual_space_nonblocking()
         call this%total_cell_mass%Exchange_virtual_space_nonblocking()
-        call this%vertex_mass%Exchange_virtual_space_nonblocking()
-        call this%inversed_vertex_mass%Exchange_virtual_space_nonblocking()
+       ! call this%vertex_mass%Exchange_virtual_space_nonblocking()
+       ! call this%inversed_vertex_mass%Exchange_virtual_space_nonblocking()
         call this%mat_id%Exchange_virtual_space_nonblocking()
         call this%num_mat_cells%Exchange_virtual_space_nonblocking()
         call this%total_vof%Exchange_virtual_space_nonblocking()
@@ -502,9 +502,6 @@ contains
         call this%total_volume        %Point_to_data(vol)
         call this%total_vof           %Point_to_data(vof)
         call this%total_sie           %Point_to_data(sie)
-
-        call this%inversed_vertex_mass%Point_to_data(inversed_vertex_mass)
-        call this%vertex_mass   %Point_to_data(vertex_mass)
 
         call this%materials%temperature%Point_to_data(temperature_vof)
         call this%materials%temperature_old%Point_to_data(temperature_vof_old)
@@ -548,8 +545,8 @@ contains
         dt_de_temp = 0d0
         call this%total_sie%Exchange_end()
         call this%total_cell_mass%Exchange_end()
-        call this%vertex_mass%Exchange_end()
-        call this%inversed_vertex_mass%Exchange_end()
+!        call this%vertex_mass%Exchange_end()
+!        call this%inversed_vertex_mass%Exchange_end()
         call this%mat_id%Exchange_end()
         call this%num_mat_cells%Exchange_end()
         call this%total_vof%Exchange_end()
@@ -1470,10 +1467,11 @@ contains
 
         call this%velocity%Impose_no_move_3d(this%mesh%coordinates)
 
-        call this%velocity%Apply_boundary(this%mesh%coordinates%data)
+        call this%velocity%Apply_boundary(this%mesh%coordinates%data, is_blocking=.false.)
 
         call this%velocity%Calculate_derivatives(this%mesh%coordinates, this%total_vof, this%total_volume&
             , this%nx, this%ny, this%nz, this%emf)
+            call this%velocity%Exchange_end()
     end subroutine Calculate_velocity_3d
 
 
@@ -1851,13 +1849,9 @@ contains
             end do
         end do
 
+        call this%total_sie%Exchange_virtual_space_nonblocking()
 
-
-
-
-        call this%total_sie%Exchange_virtual_space_blocking()
-
-        call this%materials%sie%Exchange_virtual_space_blocking()
+        call this%materials%sie%Exchange_virtual_space_nonblocking()
 
 
         return
@@ -2124,7 +2118,10 @@ contains
 !                end do
 !            end do
 !        end do
-
+call this%velocity%Calculate_derivatives(this%mesh%coordinates, &
+            this%total_vof, this%total_volume, this%nx, this%ny, this%nz, this%emf)
+call this%total_sie%exchange_end()
+call this%materials%sie%exchange_end()
 
         deallocate(vof_sum_arr)
         deallocate(vof_max_arr)
@@ -2333,7 +2330,7 @@ contains
             call this%materials%vof%Exchange_end()
         call this%Calculate_density(this%rezone%material_volume)
         call this%total_density%Apply_boundary()
-            call this%materials%density  %Exchange_virtual_space_blocking()
+!            call this%materials%density  %Exchange_virtual_space_blocking()
 
 
 

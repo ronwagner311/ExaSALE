@@ -691,10 +691,10 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
         !call this%cr%Restart(ckpt_name)
 
         reem_total = omp_get_wtime()
-                        call this%Write_to_files()
+                        !call this%Write_to_files()
         ncyc = 1
         if (this%rezone_type == 0) then
-            max_ncyc = 20
+            max_ncyc = 21
         else
             max_ncyc = 201
         end if
@@ -703,7 +703,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
             do while (this%time%Should_continue() .and. ncyc < max_ncyc)
                 call this%hydro%do_time_step_2d(this%time)
                 call this%time%Update_time()
-                call this%Write_to_files()
+                !call this%Write_to_files()
                 ncyc = ncyc + 1
             !       call this%cr%Checkpoint(ckpt_name)
             end do
@@ -713,7 +713,7 @@ call Constructor%materials%cell_mass%point_to_data(cell_mass_vof)
                 reem_start = omp_get_wtime()
                 call this%hydro%do_time_step_3d(this%time)
                 call this%time%Update_time()
-                call this%Write_to_files()
+              !  call this%Write_to_files()
                 counter = counter + 1
                 ncyc = ncyc + 1
             !      call this%cr%Checkpoint(ckpt_name)
