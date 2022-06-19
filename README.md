@@ -5,11 +5,11 @@ This repository contains the code that originates for the idea presented [https:
 ## Prerequisits
 
 This code was tested with:
-1. intel/2017 or intel/2018
-2. OpenMPI 1.10.4 and OpenMPI 4.0.4 - any OpenMPI that supports MPI3+ standard.
+1. intel/2017 or intel/2018 and OneAPI 2021
+2. OpenMPI 1.10.4, 4.0.4, 4.1.3 - any OpenMPI that supports MPI3+ standard.
 3. json-fortran https://github.com/jacobwilliams/json-fortran compiled with the same intel.
 4. cmake 3.15 or higher
-5. Silo for diagnostic
+5. Silo for diagnostic (optional)
 
 ## Folders Documentation
 
