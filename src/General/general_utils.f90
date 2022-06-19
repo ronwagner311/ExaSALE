@@ -91,6 +91,8 @@ contains
             write(str, '(I2)') number
         elseif (number < 1000) then
             write(str, '(I3)') number
+        elseif (number < 10000) then
+            write(str, '(I4)') number
         end if
     end function int2str
 

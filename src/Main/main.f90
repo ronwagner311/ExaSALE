@@ -11,14 +11,23 @@ program main
     integer :: num_args, ix
     integer :: ierr, rank
 
-
+    character(:), allocatable :: arg
+    integer :: arglen, stat
+    call get_command_argument(number=1, length=arglen)  ! Assume for simplicity success
+    if (arglen == 0) then
+        df_obj = datafile_t("../Datafiles/datafile.json")
+        else
+            allocate (character(arglen) :: arg)
+            call get_command_argument(number=1, value=arg, status=stat)
+            df_obj = datafile_t(arg)
+    end if
 
     call MPI_init(ierr)
     call mpi_comm_rank(MPI_COMM_WORLD, rank, ierr)
 
     allocate(prob)
 
-    df_obj = datafile_t("../Datafiles/datafile.json")
+
 
     prob = problem_t(df_obj)
     call prob%Start_calculation()
