@@ -15,11 +15,7 @@ set(ENV{JSONFORTRAN} "/home/reemh/Downloads/json-fortran_gnu")
 set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O0 -ffree-line-length-512")
 else()
 set(ENV{JSONFORTRAN} "/home/reemh/Downloads/json-fortran")
-<<<<<<< HEAD
 set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O2 -g -qopenmp ")
-=======
-set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O0 -qopenmp ")
->>>>>>> f3625b3b3bf34a9ff5bd174df8e5b7c9a7979398
 endif()
 
 #set(CMAKE_Fortran_FLAGS "-g -qopenmp -fpp -fPIC -traceback -fpe0")
