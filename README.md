@@ -1,4 +1,4 @@
-# Backus: A Scalable Framework for Scientific Code in Modern Fortran and MPI-3
+# ExaSALE: A Scalable Framework for Scientific Code in Modern Fortran and MPI-3
 This repository contains the code that originates for the idea presented [https://arxiv.org/abs/1910.06415].
 
 For the datafiles for scaling (lagrange/euler and weak/strong) please refer to https://drive.google.com/file/d/1NXgf8GsVuGG-3ZO87vrbQgpyJ8QRM5Sr/view?usp=sharing
@@ -13,21 +13,21 @@ This code was tested with:
 
 ## Folders Documentation
 
-The src folder contains the source code files of Backus, here is a short documentation of its subfolders.
+The src folder contains the source code files of ExaSALE, here is a short documentation of its subfolders.
 
 |Folder                    |Documentation                                                                   |
 |:---:                     |:---                                                                            |
 |**Boundary_conditions**   |Contains the classes that implement the Boundary Conditions                     |
 |**CR**                    |Contains the classes that implement the Checkpoint Restart                      |
-|**Datafiles**             |Contains all the input datafiles for Backus                                     |
+|**Datafiles**             |Contains all the input datafiles for ExaSALE                                     |
 |**Diagnostics**           |Contains the modules and code files that implement the Diagnostics              |
-|**General**               |Contains General modules and code files for Backus                              |
+|**General**               |Contains General modules and code files for ExaSALE                              |
 |**Input**                 |Contains the classes that parse the input datafile                              |
-|**Main**                  |Contains the main code files of Backus                                          |
+|**Main**                  |Contains the main code files of ExaSALE                                          |
 |**Material**              |Contains the classes that belong to the materials                               |
 |**Mesh**                  |Contains the mesh implementation classes                                        |
 |**Parallel**              |Contains the Parallelization implementation classes                             |
-|**Quantities**            |Contains all the Physical quantities classes in Backus                          |
+|**Quantities**            |Contains all the Physical quantities classes in ExaSALE                          |
 |**Rezone_and_Advect**     |Contains the implementation of the rezone and advection classes                 |
 |**Scripts**               |Contains the Scripts code files                                                 |
 |**Time_step**             |Contains the hydrodynamic time step implementation                              |
@@ -35,7 +35,7 @@ The src folder contains the source code files of Backus, here is a short documen
 
 
 ## Compile & Install
-This project is built via cmake. In order to create the makefiles and the executable you need to run the following commands from the Backus main directory:
+This project is built via cmake. In order to create the makefiles and the executable you need to run the following commands from the ExaSALE main directory:
 ```
 mkdir build
 cd build
@@ -63,7 +63,7 @@ The script executes the following mpirun command:
 mpirun -n np ../exec/main
 ```
 Where `np` is the number of mpi processes that are being used.\
-In order to run Backus the number of processes in the executation command needs to be similar to the number of processes in the datafile.\
+In order to run ExaSALE the number of processes in the executation command needs to be similar to the number of processes in the datafile.\
 So if you change the number of processes in the datafile **you need to update the number of processes in `run.sh` accordingly**.
 
 #### Execute on a Cluster
@@ -483,13 +483,13 @@ You need to set `p` in `"np"` to the total number of mpi processes you want, and
 ```
 #### Sedov-Taylor run example
 For example this is the initial state of the problem (3D, 15^3 cells)
-![Initial Problem](https://github.com/Scientific-Computing-Lab-NRCN/Backus/blob/main/Images/visit0005.png)
+![Initial Problem](https://github.com/ronwagner311/ExaSALE/blob/main/Images/visit0005.png)
 
 
 Lagrangian mesh:
 
-![Lagrange](https://github.com/Scientific-Computing-Lab-NRCN/Backus/blob/main/Images/visit0007.png)
+![Lagrange](https://github.com/ronwagner311/ExaSALE/blob/main/Images/visit0007.png)
 
 
 ALE:
-![ALE](https://github.com/Scientific-Computing-Lab-NRCN/Backus/blob/main/Images/visit0006.png)
+![ALE](https://github.com/ronwagner311/ExaSALE/blob/main/Images/visit0006.png)
