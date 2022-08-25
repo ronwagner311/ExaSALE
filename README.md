@@ -1,4 +1,4 @@
-# ExaSALE: A Scalable Framework for Scientific Code in Modern Fortran and MPI-3
+# ScalSALE: A Scalable Framework for Scientific Code in Modern Fortran and MPI-3
 This repository contains the code that originates for the idea presented [https://arxiv.org/abs/1910.06415].
 
 For the datafiles for scaling (lagrange/euler and weak/strong) please refer to https://drive.google.com/file/d/1NXgf8GsVuGG-3ZO87vrbQgpyJ8QRM5Sr/view?usp=sharing
@@ -13,21 +13,21 @@ This code was tested with:
 
 ## Folders Documentation
 
-The src folder contains the source code files of ExaSALE, here is a short documentation of its subfolders.
+The src folder contains the source code files of ScalSALE, here is a short documentation of its subfolders.
 
 |Folder                    |Documentation                                                                   |
 |:---:                     |:---                                                                            |
 |**Boundary_conditions**   |Contains the classes that implement the Boundary Conditions                     |
 |**CR**                    |Contains the classes that implement the Checkpoint Restart                      |
-|**Datafiles**             |Contains all the input datafiles for ExaSALE                                     |
+|**Datafiles**             |Contains all the input datafiles for ScalSALE                                     |
 |**Diagnostics**           |Contains the modules and code files that implement the Diagnostics              |
-|**General**               |Contains General modules and code files for ExaSALE                              |
+|**General**               |Contains General modules and code files for ScalSALE                              |
 |**Input**                 |Contains the classes that parse the input datafile                              |
-|**Main**                  |Contains the main code files of ExaSALE                                          |
+|**Main**                  |Contains the main code files of ScalSALE                                          |
 |**Material**              |Contains the classes that belong to the materials                               |
 |**Mesh**                  |Contains the mesh implementation classes                                        |
 |**Parallel**              |Contains the Parallelization implementation classes                             |
-|**Quantities**            |Contains all the Physical quantities classes in ExaSALE                          |
+|**Quantities**            |Contains all the Physical quantities classes in ScalSALE                          |
 |**Rezone_and_Advect**     |Contains the implementation of the rezone and advection classes                 |
 |**Scripts**               |Contains the Scripts code files                                                 |
 |**Time_step**             |Contains the hydrodynamic time step implementation                              |
@@ -35,7 +35,7 @@ The src folder contains the source code files of ExaSALE, here is a short docume
 
 
 ## Compile & Install
-This project is built via cmake. In order to create the makefiles and the executable you need to run the following commands from the ExaSALE main directory:
+This project is built via cmake. In order to create the makefiles and the executable you need to run the following commands from the ScalSALE main directory:
 ```
 mkdir build
 cd build
@@ -63,7 +63,7 @@ The script executes the following mpirun command:
 mpirun -n np ../exec/main
 ```
 Where `np` is the number of mpi processes that are being used.\
-In order to run ExaSALE the number of processes in the executation command needs to be similar to the number of processes in the datafile.\
+In order to run ScalSALE the number of processes in the executation command needs to be similar to the number of processes in the datafile.\
 So if you change the number of processes in the datafile **you need to update the number of processes in `run.sh` accordingly**.
 
 #### Execute on a Cluster
