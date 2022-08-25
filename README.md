@@ -226,7 +226,7 @@ For more examples please refer to the different datafiles in src/Datafiles.
 
 #### Sedov-Taylor run example
 For example this is the initial state of the problem (3D, 15^3 cells)
-![Initial Problem](https://github.com/ronwagner311/ExaSALE/blob/main/Images/visit0005.png)
+![Initial Problem]<img src="https://github.com/ronwagner311/ExaSALE/blob/main/Images/visit0005.png" width="400" height="790">
 
 
 Lagrangian mesh:
