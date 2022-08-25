@@ -74,7 +74,7 @@ Please note that you need to change the partition in the job request script:
 In our case the partition is mixedp, you need to change it to the partition you are using on your cluster.\
 In addition, you need to change the module load on the job request to the modules you are loading on your claster (if needed). The relevant part in the job request script is:
 ```
-module load intel/18.0.1.163 openmpi/4.0.4_intel mpi/impi-intel2018 cmake anaconda2 ScientificLibraries/silo/4.11
+module load intel/18.0.1.163 openmpi/4.0.4_intel mpi/impi-intel2018 cmake anaconda2
 ```
 
 ## Datafile
