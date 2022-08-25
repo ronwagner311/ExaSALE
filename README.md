@@ -9,7 +9,6 @@ This code was tested with:
 2. OpenMPI 1.10.4, 4.0.4, 4.1.3 - any OpenMPI that supports MPI3+ standard.
 3. json-fortran https://github.com/jacobwilliams/json-fortran compiled with the same intel.
 4. cmake 3.15 or higher
-5. Silo for diagnostic (optional)
 
 ## Folders Documentation
 
@@ -20,7 +19,6 @@ The src folder contains the source code files of ScalSALE, here is a short docum
 |**Boundary_conditions**   |Contains the classes that implement the Boundary Conditions                     |
 |**CR**                    |Contains the classes that implement the Checkpoint Restart                      |
 |**Datafiles**             |Contains all the input datafiles for ScalSALE                                     |
-|**Diagnostics**           |Contains the modules and code files that implement the Diagnostics              |
 |**General**               |Contains General modules and code files for ScalSALE                              |
 |**Input**                 |Contains the classes that parse the input datafile                              |
 |**Main**                  |Contains the main code files of ScalSALE                                          |
@@ -134,17 +132,7 @@ The following segment will describe the datafile in pieces.
     }, 
 ```
 
-4. General switches - define different symetries, vertex mass calculation (diamond, etc.) and schemes in general, is defined in the following json segment. 
-```json
-"switches": {
-        "sw_symmetry": 0, 
-	"cyl": 0,
-        "sw_vert_mass": 1, 
-        "sw_nraz": 1
-    }, 
-```
-
-5. Contours - Between each two layers (and the different axis) a contour must be defined for the maximal value, and minimal value of the coordinates. We allow multiple ways to define the contours for example an elipse or a simple straight line. Usually, the j and the k contours are defined as the angles. For a more general case of building a mesh, please edit the code such that the contours_j and contours_k can support such a case. Please note that the symmetry axis is I, therefore usually you will want to define a simple box by giving I the boundaries of the box and the J as a "dummy angle argument" such as follows: this will create a box, specifically 4 boxes with 4 different layers: the first layer is bounded from (0,0) to (0.5,0) , the second layer (0.5,0) to (1,0), the third layer from (0.5,0) to (0.5,0.5) and the last layer from (0.5,0.5) to (1,1). 
+4. Contours - Between each two layers (and the different axis) a contour must be defined for the maximal value, and minimal value of the coordinates. We allow multiple ways to define the contours for example an elipse or a simple straight line. Usually, the j and the k contours are defined as the angles. For a more general case of building a mesh, please edit the code such that the contours_j and contours_k can support such a case. Please note that the symmetry axis is I, therefore usually you will want to define a simple box by giving I the boundaries of the box and the J as a "dummy angle argument" such as follows: this will create a box, specifically 4 boxes with 4 different layers: the first layer is bounded from (0,0) to (0.5,0) , the second layer (0.5,0) to (1,0), the third layer from (0.5,0) to (0.5,0.5) and the last layer from (0.5,0.5) to (1,1). 
 
 ```json
 "contours": {
@@ -188,7 +176,7 @@ The following segment will describe the datafile in pieces.
     }, 
 ```
 
-6. Zones - After defining the contour, sometimes the user will want to give each cell a different size, thie is defined in the zone segement. Whereas, constant defines each cell to be in the same size (dr and d_theta are for other types of zones, such a geometry series etc...)
+5. Zones - After defining the contour, sometimes the user will want to give each cell a different size, thie is defined in the zone segement. Whereas, constant defines each cell to be in the same size (dr and d_theta are for other types of zones, such a geometry series etc...)
 ```json
  "zone": {
         "zone_i": [
@@ -214,24 +202,7 @@ The following segment will describe the datafile in pieces.
     }, 
 ```
 
-7. Diagnostics - please refer to src/Main/problem.f90 and src/Diagnostics/* to find the different types of diagnostics that will be generated along the execution. Type currently supports silo and text only.
-```json
-"diagnostics": {
-        "number_diagnostics": 1,
-        "group": [
-            {
-                "condition": 1,
-                "diagnostic": [  
-                    {
-                        "type": "text",
-                        "variables": ["velocity_x", "velocity_y","position_x", "position_y", "position_z", "pressure", "density", "SIE", "time", "index"]
-                    }
-                ]
-            }
-        ]
-    },
-```
-8. Simulation parameters - to change the parameters of the simulation such as final time, and other predefined constants, alter this segment:
+6. Simulation parameters - to change the parameters of the simulation such as final time, and other predefined constants, alter this segment:
 ```json
    "simulation_parameters": {
         "time_final": 0.3, 
@@ -242,7 +213,7 @@ The following segment will describe the datafile in pieces.
     },
 ```
 
-9. Rezone type - currently only Lagrange and Euler rezoneing are allowed. 0 for lagrange 1 for euler 
+7. Rezone type - currently only Lagrange and Euler rezoneing are allowed. 0 for lagrange 1 for euler 
 ```json
 "rezone_advect": {
         "rezone_type": 0
@@ -252,235 +223,7 @@ The following segment will describe the datafile in pieces.
 For more examples please refer to the different datafiles in src/Datafiles. 
 
 ## Sedov-Taylor
-#### Datafile exmaple
-The Sedov-Taylor datafile is as shown below:
-```json
-{
-    "Hel": {
-        "A": 1.0, 
-        "Z_2": 1.0, 
-        "gamma_gas": 1.667, 
-        "rho_0": 1.0, 
-	"sie_0": 1E-3,
-        "Z": 1.0, 
-        "eos_type": "ideal"
-    },
-    "Air": {
-        "A": 1.0, 
-        "Z_2": 1.0, 
-        "gamma_gas": 1.667, 
-        "rho_0": 1.0, 
-	"sie_0": 5.0277E3,
-        "Z": 1.0, 
-        "eos_type": "ideal"
-    }, 
-    "switches": {
-        "sw_symmetry": 0, 
-        "sw_vert_mass": 1, 
-        "sw_nraz": 1,
-        "sw_wilkins": 0
-    },
-    "cell_set": {
-        "mesh_type": "x_y", 
-        "boundary_conditions": [
-            2, 
-            2, 
-            2, 
-            2,
-            2,
-            2
-        ]
-    }, 
-    "contours": {
-        "contours_j": [
-            {
-                "units": "regular", 
-                "theta0": 0.0
-            },
-            {
-                "units": "regular", 
-                "theta0": 0.025
-            }, 
-            {
-                "units": "regular", 
-                "theta0": 1.125
-            }
-        ],
-        "contours_k": [
-            {
-                "units": "regular",
-                "phi0": 0.0
-            },
-            {
-                "units": "regular",
-                "phi0": 0.025
-            },
-            {
-                "units": "regular",
-                "phi0": 1.125
-            }
-        ],
-        "contours_i": [
-            {
-                "y1": -10, 
-                "x1": 0, 
-                "y2": 10.0,
-                "x2": 0, 
-                "contour_type": "line"
-            }, 
-            {
-                "y1": -10, 
-                "x1": 0.025, 
-                "y2": 10.0, 
-                "x2": 0.025, 
-                "contour_type": "line"
-            },
-            {
-                "y1": -10, 
-                "x1": 1.125, 
-                "y2": 10.0, 
-                "x2": 1.125, 
-                "contour_type": "line"
-            }
-        ]
-    }, 
-    "zone": {
-        "zone_i": [
-            {
-                "type": "constant", 
-                "dr": 1.0
-            }, 
-            {
-                "type": "constant", 
-                "dr": 1.0
-            }
-        ], 
-        "zone_j": [
-            {
-                "d_theta": 1.0, 
-                "type": "constant"
-            },
-            {
-                "d_theta": 1.0, 
-                "type": "constant"
-            }
-        ],
-        "zone_k": [
-            {
-                "d_phi": 1.0,
-                "type": "constant"
-            },
-            {
-                "d_phi": 1.0,
-                "type": "constant"
-            }
-        ]
-    }, 
-    "diagnostics": {
-        "number_diagnostics": 1,
-        "group": [
-            {
-                "condition": 1,
-                "diagnostic": [  
-                    {
-                        "type": "silo",
-                        "variables": ["velocity_x", "velocity_y","position_x", "position_y", "position_z", "pressure", "density", "SIE", "time", "index"]
-                    }
-                ]
-            }
-        ]
-    },
-    "layers_materials": {
-    	"number_layers_j": 2,
-        "number_cells_j": [
-            1,
-            70
-        ], 
-        "number_layers_i": 2, 
-        "number_cells_i": [
-            1,
-            70
-        ],
-        "number_layers_k":2,
-        "number_cells_k": [
-            1,
-            70
-        ],
-        "materials": [
-            "Air", 
-            "Hel", 
-            "Hel",
-            "Hel",
-            "Hel",
-            "Hel"
-        ]
-    }, 
-    "data": {
-        "nyb": 3, 
-        "name": "sod_3d", 
-        "nxb": 102,
-	    "nzb": 102
-    }, 
-    "simulation_parameters": {
-        "time_final": 2e-3, 
-        "init_temperature": 300, 
-        "dt0": 1e-14, 
-        "dt_factor": 0.1, 
-        "cyl": 1, 
-        "dt_max": 0.1,
-        "linear_visc_fac": 0.2,
-        "quad_visc_fac": 1,
-        "dt_cour_fac": 3
-    },
-    "rezone_advect":{
-        "rezone_type": "lagrange"
-    }
-    "parallel": {
-	"np": 1,
-	"npx": 1,
-	"npy": 1,
-	"npz": 1
-    }
-}
-```
-To execute sedov-taylor please copy to `Datafiles/datafile.json` the Sedov-Taylor 3D datafile, which is `Datafiles/datafile_sedov_taylor_3d.json`, And simply execute the code as explained above.\
-In order to change the mesh size you need change the number_cells section in the datafile.\
-Here is an example of the number_cells section in the datafile for 11^3 mesh cells:
-```json
-"number_layers_j": 2,
-        "number_cells_j": [
-            1,
-            10
-        ], 
-        "number_layers_i": 2, 
-        "number_cells_i": [
-            1,
-            10
-        ],
-        "number_layers_k":2,
-        "number_cells_k": [
-            1,
-            10
-        ],
-```
-In order to use parallelization, you need to add the following section to the datafile:
-```json
-"parallel": {
-	"np": p,
-	"npx": nx,
-	"npy": ny,
-	"npz": nz
-    }
-```
-You need to set `p` in `"np"` to the total number of mpi processes you want, and set the number of mpi processes you want in each axis by changing `nx, ny, nz` to the desire mpi processes number. Here is an example for the parallel section for 8 mpi processes 2 in each of the axies:
-```json
-"parallel": {
-	"np": 8,
-	"npx":2,
-	"npy":2,
-	"npz":2
-    }
-```
+
 #### Sedov-Taylor run example
 For example this is the initial state of the problem (3D, 15^3 cells)
 ![Initial Problem](https://github.com/ronwagner311/ExaSALE/blob/main/Images/visit0005.png)
