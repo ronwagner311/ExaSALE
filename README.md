@@ -231,8 +231,7 @@ For example this is the initial state of the problem (3D, 15^3 cells)
 <img src="https://github.com/ronwagner311/ExaSALE/blob/main/Images/visit0005.png" width="400" height="400">
 </p>
 
-<pre>
-Lagrangian mesh:                                      ALE:
-</pre>
+
+Lagrangian mesh:&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;                                      ALE:
 <img align="left" src="https://github.com/ronwagner311/ExaSALE/blob/main/Images/visit0007.png" width="400" height="400">
 <img align="right" src="https://github.com/ronwagner311/ExaSALE/blob/main/Images/visit0006.png" width="400" height="400">
